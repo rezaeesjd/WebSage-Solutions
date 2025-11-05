@@ -7,23 +7,26 @@ import { KYC } from './components/KYC';
 import { Payment } from './components/Payment';
 import { Confirmation } from './components/Confirmation';
 import { Wallet } from './components/Wallet';
+import { GuidedHighlightProvider } from './components/GuidedHighlightProvider';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen">
-        <DemoRibbon />
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/compare/gold" element={<Compare />} />
-          <Route path="/buy/gold" element={<Buy />} />
-          <Route path="/kyc" element={<KYC />} />
-          <Route path="/pay" element={<Payment />} />
-          <Route path="/confirm" element={<Confirmation />} />
-          <Route path="/wallet" element={<Wallet />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
+      <GuidedHighlightProvider>
+        <div className="min-h-screen">
+          <DemoRibbon />
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/compare/gold" element={<Compare />} />
+            <Route path="/buy/gold" element={<Buy />} />
+            <Route path="/kyc" element={<KYC />} />
+            <Route path="/pay" element={<Payment />} />
+            <Route path="/confirm" element={<Confirmation />} />
+            <Route path="/wallet" element={<Wallet />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </GuidedHighlightProvider>
     </BrowserRouter>
   );
 }
