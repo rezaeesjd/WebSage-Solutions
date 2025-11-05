@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GVEN Demo — KYC</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <div id="demoRibbon">Demo Mode</div>
+        <h1>KYC Verification (Demo)</h1>
+        <p class="muted">Provide sample details to unlock the simulated payment step.</p>
+      </div>
+      <div>
+        <a class="btn secondary" href="../wallet/">View Wallet</a>
+      </div>
+    </header>
+    <main class="layout-grid columns-2">
+      <form class="card form-grid" id="kycForm" novalidate>
+        <div>
+          <label for="kycFullName">Full name</label>
+          <input id="kycFullName" type="text" autocomplete="name" required />
+        </div>
+        <div>
+          <label for="kycEmail">Email</label>
+          <input id="kycEmail" type="email" autocomplete="email" required />
+        </div>
+        <div>
+          <label for="kycAddressLine1">Address line 1</label>
+          <input id="kycAddressLine1" type="text" autocomplete="address-line1" required />
+        </div>
+        <div>
+          <label for="kycCountry">Country</label>
+          <input id="kycCountry" type="text" value="United States" readonly />
+        </div>
+        <div>
+          <label for="kycDOB">Date of birth (optional)</label>
+          <input id="kycDOB" type="date" />
+        </div>
+        <div>
+          <label class="radio-option" style="display: flex; gap: 0.75rem; align-items: center">
+            <input id="kycAgree" type="checkbox" required style="width: auto" />
+            <span>I confirm this is a demo and data is not real.</span>
+          </label>
+        </div>
+        <button id="btnKycSubmit" class="primary" type="submit">Submit &amp; continue</button>
+        <p id="kycStatus" class="muted" aria-live="polite"></p>
+      </form>
+      <aside class="card">
+        <h2>Why we ask</h2>
+        <p>This short form proves identity for regulated commodities trading.</p>
+        <p class="notice">In the demo, your submission is approved instantly.</p>
+      </aside>
+    </main>
+    <script src="../js/demo-data.js"></script>
+    <script src="../js/demo-common.js"></script>
+    <script>
+      DemoHelpers.hydrateHeader();
+      DemoHelpers.applyDemoGuard();
+      const form = document.getElementById("kycForm");
+      const status = document.getElementById("kycStatus");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!form.reportValidity()) {
+          return;
+        }
+        const payload = {
+          name: document.getElementById("kycFullName").value.trim(),
+          email: document.getElementById("kycEmail").value.trim(),
+          address: document.getElementById("kycAddressLine1").value.trim(),
+          country: "United States",
+          dob: document.getElementById("kycDOB").value || null,
+        };
+        status.textContent = "Submitting…";
+        document.getElementById("btnKycSubmit").disabled = true;
+        await DemoAPI.submitKyc(payload);
+        status.textContent = "Approved! Redirecting to payment.";
+        setTimeout(() => {
+          window.location.href = "../pay/";
+        }, 800);
+      });
+    </script>
+  </body>
+</html>

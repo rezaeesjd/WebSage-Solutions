@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GVEN Demo — Buy Gold</title>
+    <link rel="stylesheet" href="../../styles.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <div id="demoRibbon">Demo Mode</div>
+        <h1 id="buyHeader">Buy Gold — Mumbai Market</h1>
+        <p class="muted">Quantity and funding options are locked in this guided path.</p>
+      </div>
+      <div>
+        <a class="btn secondary" href="../../wallet/">View Wallet</a>
+      </div>
+    </header>
+    <main class="layout-grid columns-2">
+      <section class="card">
+        <h2>Order details</h2>
+        <div class="form-grid">
+          <div>
+            <label for="quantityInput">Quantity (troy oz)</label>
+            <input id="quantityInput" type="number" min="1" max="1" step="1" value="1" disabled aria-disabled="true" />
+            <p class="muted">In this demo, quantity is fixed to 1 oz.</p>
+          </div>
+          <div id="custodySelector">
+            <label>Custody</label>
+            <div class="radio-group">
+              <div class="radio-option active" id="custodyVault">Vault (Mumbai)</div>
+              <div
+                class="radio-option"
+                data-demo-disabled="true"
+                data-tooltip="Available in the full app. In this demo please choose the highlighted option."
+              >
+                Delivery (Courier)
+              </div>
+            </div>
+          </div>
+          <div id="paymentMethodSelector">
+            <label>Payment method</label>
+            <div class="radio-group">
+              <div class="radio-option active" id="paymentCard">Card payment</div>
+              <div
+                class="radio-option"
+                data-demo-disabled="true"
+                data-tooltip="Available in the full app. In this demo please choose the highlighted option."
+              >
+                Bank transfer
+              </div>
+              <div
+                class="radio-option"
+                data-demo-disabled="true"
+                data-tooltip="Available in the full app. In this demo please choose the highlighted option."
+              >
+                Wallet balance
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="price-grid" id="priceBreakdown"></div>
+        <div>
+          <div class="tooltip-inline">Lock timer (demo only)</div>
+          <div id="lockTimer">00:30</div>
+        </div>
+        <button id="btnContinueToKyc" class="primary">Continue to KYC</button>
+      </section>
+      <aside class="card">
+        <h2>Market notes</h2>
+        <p>Mumbai vault provides insured custody with next-day audit.</p>
+        <p class="notice">All values are simulated for the guided demo.</p>
+      </aside>
+    </main>
+    <script src="../../js/demo-data.js"></script>
+    <script src="../../js/demo-common.js"></script>
+    <script>
+      DemoHelpers.hydrateHeader();
+      DemoHelpers.applyDemoGuard();
+      const state = DemoHelpers.ensureStateDefaults();
+      const breakdown = document.getElementById("priceBreakdown");
+      const order = state.order;
+      const spreadFee = order.unitPriceUsd * order.quantityOz * order.spreadPct;
+      const fees = order.feesUsd + spreadFee;
+      const total = order.unitPriceUsd * order.quantityOz + fees;
+      breakdown.innerHTML = `
+        <div class="price-item">
+          <strong>Unit price (USD)</strong>
+          <div>${DemoHelpers.formatCurrency(order.unitPriceUsd)}</div>
+        </div>
+        <div class="price-item">
+          <strong>FX rate used</strong>
+          <div>${order.fxRate}</div>
+        </div>
+        <div class="price-item">
+          <strong>Estimated fees</strong>
+          <div>${DemoHelpers.formatCurrency(fees)}</div>
+        </div>
+        <div class="price-item">
+          <strong>Estimated total (USD)</strong>
+          <div>${DemoHelpers.formatCurrency(total)}</div>
+        </div>
+      `;
+
+      let remaining = 30;
+      const timer = document.getElementById("lockTimer");
+      const interval = setInterval(() => {
+        remaining -= 1;
+        if (remaining <= 0) {
+          clearInterval(interval);
+          timer.textContent = "Expired (demo)";
+          return;
+        }
+        timer.textContent = `00:${String(remaining).padStart(2, "0")}`;
+      }, 1000);
+
+      document.getElementById("btnContinueToKyc").addEventListener("click", () => {
+        DemoAPI.writeState({
+          ...state,
+          order: {
+            ...order,
+            quantityOz: 1,
+            custody: "VAULT_MUMBAI",
+            paymentMethod: "CARD",
+            totalUsd: total,
+          },
+        });
+        window.location.href = "../../kyc/";
+      });
+    </script>
+  </body>
+</html>

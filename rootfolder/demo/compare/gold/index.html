@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GVEN Demo — Compare Markets</title>
+    <link rel="stylesheet" href="../../styles.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <div id="demoRibbon">Demo Mode</div>
+        <h1 id="compareHeader">Compare Gold Markets (1 oz, in USD)</h1>
+        <div class="layout-grid" style="gap: 0.4rem">
+          <span id="fxContextChip" class="badge">FX: Synchronized @ 16:00 UTC (demo)</span>
+          <span id="priceTypeChip" class="badge">Price Type: Spot (demo)</span>
+        </div>
+      </div>
+      <div>
+        <a class="btn secondary" href="../../wallet/">View Wallet</a>
+      </div>
+    </header>
+    <main class="layout-grid columns-2">
+      <section class="card table-card">
+        <table id="compareTable">
+          <thead>
+            <tr>
+              <th>Market</th>
+              <th>Price (USD)</th>
+              <th>Local</th>
+              <th>FX</th>
+              <th>Spread vs Cheapest</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+      <aside class="card" id="explainCard">
+        <h2>Why prices differ</h2>
+        <p>All prices shown in USD using synchronized FX.</p>
+        <p class="badge verified"><span aria-hidden="true">✔</span> Verified by GVEN</p>
+        <p class="notice warning">Mumbai currently 0.4% cheaper than London.</p>
+      </aside>
+    </main>
+    <script src="../../js/demo-data.js"></script>
+    <script src="../../js/demo-common.js"></script>
+    <script>
+      DemoHelpers.hydrateHeader();
+      DemoHelpers.applyDemoGuard();
+
+      const tableBody = document.querySelector("#compareTable tbody");
+      DemoAPI.getQuotes().then((payload) => {
+        const cheapest = payload.markets.reduce((min, market) => (market.price_usd < min.price_usd ? market : min), payload.markets[0]);
+        payload.markets
+          .slice()
+          .sort((a, b) => a.price_usd - b.price_usd)
+          .forEach((market) => {
+            const spread = ((market.price_usd - cheapest.price_usd) / cheapest.price_usd) * 100;
+            const row = document.createElement("tr");
+            row.id = `row${market.market_name.replace(/\s/g, "")}`;
+            if (market.market_id === "MUMBAI") {
+              row.classList.add("highlight", "isRecommended");
+            }
+            const isDemoPath = market.market_id === "MUMBAI";
+            row.innerHTML = `
+              <td>${market.market_name} ${
+                market.market_id === "MUMBAI"
+                  ? '<span class="badge recommended isRecommended">Cheapest now</span>'
+                  : ""
+              }</td>
+              <td>${DemoHelpers.formatCurrency(market.price_usd)}</td>
+              <td>${DemoHelpers.formatCurrency(market.local_price, market.local_currency)}</td>
+              <td>${market.fx}</td>
+              <td>${spread <= 0 ? "Best price" : "+" + spread.toFixed(2) + "%"}</td>
+              <td><span class="status-chip">Verified</span></td>
+              <td>
+                <button class="btnSelectMarket primary" ${
+                  isDemoPath
+                    ? ""
+                    : 'data-demo-disabled="true" data-tooltip="Demo path uses Mumbai."'
+                }>Select</button>
+              </td>
+            `;
+            tableBody.appendChild(row);
+            if (!isDemoPath) {
+              DemoHelpers.applyDemoGuard(row);
+            } else {
+              row.querySelector(".btnSelectMarket").addEventListener("click", () => {
+                const state = DemoHelpers.ensureStateDefaults();
+                DemoAPI.writeState({
+                  ...state,
+                  order: {
+                    ...state.order,
+                    market: "MUMBAI",
+                    unitPriceUsd: market.price_usd,
+                    fxRate: market.fx,
+                    localPrice: market.local_price,
+                  },
+                });
+                window.location.href = "../../buy/gold/?market=MUMBAI&currency=USD";
+              });
+            }
+          });
+      });
+    </script>
+  </body>
+</html>
