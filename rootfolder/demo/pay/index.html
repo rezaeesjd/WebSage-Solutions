@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GVEN Demo — Payment</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <div id="demoRibbon">Demo Mode</div>
+        <h1>Payment</h1>
+        <p class="muted">Use the demo card number to complete the simulated purchase.</p>
+      </div>
+      <div>
+        <a class="btn secondary" href="../wallet/">View Wallet</a>
+      </div>
+    </header>
+    <main class="layout-grid columns-2">
+      <section class="card form-grid">
+        <div id="paySummary"></div>
+        <div>
+          <h2>Card details</h2>
+          <label for="cardNumber">Card number</label>
+          <input id="cardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="4242 4242 4242 4242" required />
+          <div class="tooltip-inline">Demo number: 4242 4242 4242 4242</div>
+        </div>
+        <div class="layout-grid columns-2">
+          <div>
+            <label for="cardExpiry">Expiry</label>
+            <input id="cardExpiry" placeholder="12/30" autocomplete="cc-exp" required />
+          </div>
+          <div>
+            <label for="cardCVC">CVC</label>
+            <input id="cardCVC" placeholder="123" autocomplete="cc-csc" required />
+          </div>
+        </div>
+        <div>
+          <h2>Billing address</h2>
+          <input id="billingAddress" type="text" readonly />
+        </div>
+        <button id="btnPayNow" class="primary">Pay now</button>
+        <div id="paymentProcessing" class="notice" role="status" aria-live="polite" hidden>
+          Locking rate and executing via partner broker…
+        </div>
+        <p id="paymentError" class="notice warning" hidden></p>
+      </section>
+      <aside class="card">
+        <h2>What happens next</h2>
+        <ol>
+          <li>Card is tokenized (mock).</li>
+          <li>Order is routed to DemoBroker IN.</li>
+          <li>Your vault position appears in the wallet.</li>
+        </ol>
+      </aside>
+    </main>
+    <script src="../js/demo-data.js"></script>
+    <script src="../js/demo-common.js"></script>
+    <script>
+      DemoHelpers.hydrateHeader();
+      DemoHelpers.applyDemoGuard();
+      const state = DemoHelpers.ensureStateDefaults();
+      const order = state.order;
+      const summary = document.getElementById("paySummary");
+      const calculatedFees = order.feesUsd + order.unitPriceUsd * order.quantityOz * order.spreadPct;
+      const total = order.totalUsd || order.unitPriceUsd * order.quantityOz + calculatedFees;
+      summary.innerHTML = `
+        <h2>Summary</h2>
+        <div class="price-grid">
+          <div class="price-item"><strong>Market</strong><div>Mumbai</div></div>
+          <div class="price-item"><strong>Quantity</strong><div>${order.quantityOz.toFixed(3)} oz</div></div>
+          <div class="price-item"><strong>Unit price</strong><div>${DemoHelpers.formatCurrency(order.unitPriceUsd)}</div></div>
+          <div class="price-item"><strong>FX rate</strong><div>${order.fxRate}</div></div>
+          <div class="price-item"><strong>Fees</strong><div>${DemoHelpers.formatCurrency(calculatedFees)}</div></div>
+          <div class="price-item"><strong>Total</strong><div>${DemoHelpers.formatCurrency(total)}</div></div>
+        </div>
+      `;
+      const billing = document.getElementById("billingAddress");
+      if (state.kyc) {
+        billing.value = `${state.kyc.address}, ${state.kyc.country}`;
+      }
+
+      document.getElementById("btnPayNow").addEventListener("click", async () => {
+        const error = document.getElementById("paymentError");
+        error.hidden = true;
+        if (document.getElementById("cardNumber").value.replace(/\s/g, "") !== "4242424242424242") {
+          error.textContent = "Please use the demo card number (4242 4242 4242 4242).";
+          error.hidden = false;
+          return;
+        }
+        document.getElementById("btnPayNow").disabled = true;
+        document.getElementById("paymentProcessing").hidden = false;
+        try {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get("fail") === "1") {
+            throw new Error("Simulated failure");
+          }
+          await DemoAPI.tokenizePayment({
+            cardNumber: "4242********4242",
+            expiry: document.getElementById("cardExpiry").value,
+            cvc: document.getElementById("cardCVC").value,
+          });
+          await DemoAPI.executeOrder({
+            market: order.market,
+            quantityOz: order.quantityOz,
+            custody: order.custody,
+          });
+          window.location.href = "../confirm/?orderId=GVEN-DEMO-0001";
+        } catch (err) {
+          error.textContent = "Payment failed in demo mode. Please try again.";
+          error.hidden = false;
+          document.getElementById("btnPayNow").disabled = false;
+          document.getElementById("paymentProcessing").hidden = true;
+        }
+      });
+    </script>
+  </body>
+</html>

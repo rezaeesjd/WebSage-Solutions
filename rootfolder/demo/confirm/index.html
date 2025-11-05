@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GVEN Demo — Confirmation</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <div id="demoRibbon">Demo Mode</div>
+        <h1 id="confirmTitle">Purchase Confirmed</h1>
+        <p class="muted">Your gold position is being added to the wallet.</p>
+      </div>
+      <div>
+        <a class="btn secondary" href="../wallet/">View Wallet</a>
+      </div>
+    </header>
+    <main class="layout-grid columns-2">
+      <section class="card" id="confirmationCard">
+        <div id="successIcon" style="font-size: 3rem">✅</div>
+        <h2>Order details</h2>
+        <dl id="tradeDetails" class="layout-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem"></dl>
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem">
+          <a id="btnViewWallet" class="btn primary" href="../wallet/">View Wallet</a>
+          <button id="btnDownloadReceipt" class="secondary" type="button">Download Receipt</button>
+        </div>
+      </section>
+      <aside class="card">
+        <h2>What to expect</h2>
+        <p>Vault custody in Mumbai activates immediately with insured storage.</p>
+        <p class="notice">This is a simulated confirmation for demo purposes.</p>
+      </aside>
+    </main>
+    <script src="../js/demo-data.js"></script>
+    <script src="../js/demo-common.js"></script>
+    <script>
+      DemoHelpers.hydrateHeader();
+      DemoHelpers.applyDemoGuard();
+      const state = DemoHelpers.ensureStateDefaults();
+      const execution = state.execution;
+      const order = state.order;
+      const details = document.getElementById("tradeDetails");
+      const calculatedFees = order.feesUsd + order.unitPriceUsd * order.quantityOz * order.spreadPct;
+      const total = order.totalUsd || order.unitPriceUsd * order.quantityOz + calculatedFees;
+      const items = [
+        ["Order ID", execution?.order_id || "GVEN-DEMO-0001"],
+        ["Timestamp", DemoHelpers.formatDateTime(execution?.timestamp || "2025-10-30T16:00:42Z")],
+        ["Asset", "Gold (1 oz)"] ,
+        ["Quantity", `${order.quantityOz?.toFixed(3) || "1.000"} oz`],
+        ["Market", "Mumbai"],
+        ["Local price", DemoHelpers.formatCurrency(333299.0, "INR")],
+        ["FX", order.fxRate || 0.012],
+        ["Total (USD)", DemoHelpers.formatCurrency(total)],
+        ["Custody", "Vault Mumbai"],
+        ["Broker Partner", execution?.broker || "DemoBroker IN"],
+      ];
+      items.forEach(([label, value]) => {
+        const dt = document.createElement("dt");
+        dt.textContent = label;
+        const dd = document.createElement("dd");
+        dd.textContent = value;
+        details.append(dt, dd);
+      });
+
+      document.getElementById("btnDownloadReceipt").addEventListener("click", DemoHelpers.openReceipt);
+    </script>
+  </body>
+</html>

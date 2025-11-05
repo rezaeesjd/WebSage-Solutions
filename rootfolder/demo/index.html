@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GVEN Demo — Global Gold Price</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <div id="demoRibbon">Demo Mode</div>
+        <h1 id="heroTitle">Global Gold Price (1 oz)</h1>
+        <p class="muted">See live global prices in your currency. Buy instantly on the cheapest verified market.</p>
+      </div>
+      <div>
+        <a class="btn secondary" href="./wallet/">View Wallet</a>
+      </div>
+    </header>
+    <main class="layout-grid">
+      <section class="card layout-grid" style="gap: 1.5rem">
+        <div class="layout-grid columns-2">
+          <div>
+            <label for="currencySelector">Currency</label>
+            <div id="currencySelector" class="radio-option active" role="button">USD</div>
+            <div
+              class="radio-option"
+              data-demo-disabled="true"
+              data-tooltip="Available in the full app. In this demo please choose the highlighted option."
+            >
+              EUR
+            </div>
+            <div
+              class="radio-option"
+              data-demo-disabled="true"
+              data-tooltip="Available in the full app. In this demo please choose the highlighted option."
+            >
+              GBP
+            </div>
+          </div>
+          <div>
+            <label for="assetSelector">Asset</label>
+            <div id="assetSelector" class="radio-option active" role="button">Gold (1 oz)</div>
+            <div
+              class="radio-option"
+              data-demo-disabled="true"
+              data-tooltip="Available in the full app. In this demo please choose the highlighted option."
+            >
+              Silver
+            </div>
+            <div
+              class="radio-option"
+              data-demo-disabled="true"
+              data-tooltip="Available in the full app. In this demo please choose the highlighted option."
+            >
+              Platinum
+            </div>
+          </div>
+        </div>
+        <div>
+          <h2>Live Markets</h2>
+          <div class="card table-card" id="marketTicker">
+            <table>
+              <thead>
+                <tr>
+                  <th>Market</th>
+                  <th>Price (USD)</th>
+                  <th>Local Price</th>
+                  <th>FX Rate</th>
+                  <th>Last Updated</th>
+                </tr>
+              </thead>
+              <tbody id="marketTickerBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div style="display: flex; gap: 1rem">
+          <a id="btnCompare" class="btn primary" href="./compare/gold/?currency=USD">See Cheapest Markets</a>
+          <button id="btnHowItWorks" class="secondary">How it works</button>
+        </div>
+      </section>
+      <section class="card" id="howItWorksModal" hidden>
+        <h2>How this guided demo works</h2>
+        <ol>
+          <li>Compare verified global markets in USD.</li>
+          <li>Follow the highlighted Mumbai path for the simulated purchase.</li>
+          <li>Complete the short KYC form and use the demo card number.</li>
+          <li>See the simulated asset show up in your wallet.</li>
+        </ol>
+        <p class="muted">All data is synthetic and for demonstration only.</p>
+        <button id="btnCloseModal" class="secondary">Close</button>
+      </section>
+    </main>
+    <script src="./js/demo-data.js"></script>
+    <script src="./js/demo-common.js"></script>
+    <script>
+      DemoHelpers.hydrateHeader();
+      DemoHelpers.applyDemoGuard();
+      const tbody = document.getElementById("marketTickerBody");
+      DemoAPI.getQuotes().then((payload) => {
+        payload.markets
+          .slice()
+          .sort((a, b) => a.price_usd - b.price_usd)
+          .forEach((market) => {
+            const tr = document.createElement("tr");
+            if (market.market_id === "MUMBAI") {
+              tr.classList.add("highlight");
+            }
+            tr.innerHTML = `
+              <td>
+                <div class="layout-grid" style="gap:0.25rem">
+                  <span class="marketName">${market.market_name}</span>
+                  ${
+                    market.verified
+                      ? '<span class="marketBadgeVerified badge verified"><span aria-hidden="true">✔</span> Verified</span>'
+                      : ""
+                  }
+                </div>
+              </td>
+              <td class="priceInUserCCY">${DemoHelpers.formatCurrency(market.price_usd)}</td>
+              <td class="localPrice">${DemoHelpers.formatCurrency(market.local_price, market.local_currency)}</td>
+              <td class="fxRateUsed">${market.fx}</td>
+              <td class="lastUpdated">${DemoHelpers.formatDateTime(market.updated)}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+      });
+
+      const modal = document.getElementById("howItWorksModal");
+      document.getElementById("btnHowItWorks").addEventListener("click", () => {
+        modal.hidden = false;
+      });
+      document.getElementById("btnCloseModal").addEventListener("click", () => {
+        modal.hidden = true;
+      });
+    </script>
+  </body>
+</html>

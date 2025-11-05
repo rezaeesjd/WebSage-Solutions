@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GVEN Demo — Wallet</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <div id="demoRibbon">Demo Mode</div>
+        <h1 id="walletHeader">Your Holdings (USD)</h1>
+        <p class="muted">Track your simulated precious metal holdings with live marks in USD.</p>
+      </div>
+      <div>
+        <a class="btn secondary" href="../">Back to Landing</a>
+      </div>
+    </header>
+    <main class="layout-grid">
+      <section class="card">
+        <table id="positionsTable">
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Qty</th>
+              <th>Location / Custody</th>
+              <th>Cost Basis (USD)</th>
+              <th>Mark (USD)</th>
+              <th>P/L (USD)</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+      <section class="card" id="positionActions">
+        <h2>Actions</h2>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap">
+          <div
+            class="radio-option"
+            data-demo-disabled="true"
+            data-tooltip="Available in the full app. In this demo please choose the highlighted option."
+          >
+            Sell
+          </div>
+          <div
+            class="radio-option"
+            data-demo-disabled="true"
+            data-tooltip="Available in the full app. In this demo please choose the highlighted option."
+          >
+            Transfer
+          </div>
+          <a class="btn secondary" href="../static/demo/receipt-GVEN-DEMO-0001.pdf" target="_blank">Certificates</a>
+        </div>
+      </section>
+    </main>
+    <script src="../js/demo-data.js"></script>
+    <script src="../js/demo-common.js"></script>
+    <script>
+      DemoHelpers.hydrateHeader();
+      DemoHelpers.applyDemoGuard();
+      const tbody = document.querySelector("#positionsTable tbody");
+      DemoAPI.getWallet().then((payload) => {
+        payload.positions.forEach((position) => {
+          const row = document.createElement("tr");
+          const pl = position.pl_usd;
+          row.innerHTML = `
+            <td>Gold (1 oz)</td>
+            <td>${position.qty_oz.toFixed(3)}</td>
+            <td>Vault – Mumbai</td>
+            <td>${DemoHelpers.formatCurrency(position.cost_basis_usd)}</td>
+            <td>${DemoHelpers.formatCurrency(position.mark_usd)}</td>
+            <td style="color:${pl >= 0 ? '#047857' : '#b91c1c'}">${pl >= 0 ? "+" : ""}${DemoHelpers.formatCurrency(pl)} (${DemoHelpers.formatPercent(position.pl_pct)})</td>
+            <td><span class="badge">Demo only</span></td>
+          `;
+          tbody.appendChild(row);
+        });
+      });
+    </script>
+  </body>
+</html>
