@@ -69,7 +69,7 @@ export function Compare() {
   const chartNumericValues = chartData.flatMap((point) =>
     Object.entries(point)
       .filter(([key]) => key !== 'timestamp' && key !== 'label')
-      .map(([, value]) => value as number)
+      .map(([, value]) => (typeof value === 'number' ? value : Number(value)))
   );
   const minY = chartNumericValues.length
     ? Math.min(...chartNumericValues) - 8
