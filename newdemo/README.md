@@ -28,6 +28,19 @@ npm run preview
 
 The preview command serves the production build so you can verify it locally.
 
+## Standalone bundle
+
+If you just want to open the demo in a browser without installing any tooling, use the prebuilt files inside the `dist/`
+folder:
+
+1. Build the project once with `npm run build` (or download a copy of the repository that already includes the `dist/`
+   directory).
+2. Open `dist/index.html` in your browser. All asset paths are relative, so the page will load without running a local
+   web server.
+
+You can copy the `dist/` folder to any static hosting service or share it directly as-is; opening the `index.html` file is
+all that is required to load the UI.
+
 ## Project layout
 
 - `App.tsx` wires together the main routes.
