@@ -2,6 +2,11 @@
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+export interface MarketHistoryPoint {
+  timestamp: string;
+  prices: Record<string, number>;
+}
+
 export interface QuotesResponse {
   fx_context: {
     fix: string;
@@ -19,7 +24,10 @@ export interface QuotesResponse {
     verified: boolean;
     updated: string;
   }>;
+  history: MarketHistoryPoint[];
 }
+
+export type Market = QuotesResponse['markets'][number];
 
 export interface KYCResponse {
   status: string;
@@ -40,6 +48,7 @@ export interface ExecuteOrderResponse {
   filled_qty_oz: number;
   avg_price_usd: number;
   market_id: string;
+  market_name: string;
   custody: string;
   broker: string;
   timestamp: string;
@@ -53,6 +62,7 @@ export interface WalletResponse {
     asset: string;
     qty_oz: number;
     location: string;
+    market_name: string;
     cost_basis_usd: number;
     mark_usd: number;
     pl_usd: number;
@@ -72,12 +82,12 @@ export const api = {
       currency,
       markets: [
         {
-          market_id: 'SHANGHAI',
-          market_name: 'Shanghai',
-          local_currency: 'CNY',
-          local_price: 29150.12,
-          fx: 0.0001367,
-          price_usd: 3980.55,
+          market_id: 'MILAN',
+          market_name: 'Milan',
+          local_currency: 'EUR',
+          local_price: 3658.74,
+          fx: 1.078,
+          price_usd: 3941.21,
           verified: true,
           updated: '2025-10-30T16:00:00Z'
         },
@@ -85,29 +95,9 @@ export const api = {
           market_id: 'ZURICH',
           market_name: 'Zurich',
           local_currency: 'CHF',
-          local_price: 3601.90,
-          fx: 1.096,
-          price_usd: 3947.28,
-          verified: true,
-          updated: '2025-10-30T16:00:00Z'
-        },
-        {
-          market_id: 'MUMBAI',
-          market_name: 'Mumbai',
-          local_currency: 'INR',
-          local_price: 333299.00,
-          fx: 0.0120,
-          price_usd: 3994.00,
-          verified: true,
-          updated: '2025-10-30T16:00:00Z'
-        },
-        {
-          market_id: 'NEW_YORK',
-          market_name: 'New York',
-          local_currency: 'USD',
-          local_price: 3999.10,
-          fx: 1.0,
-          price_usd: 3999.10,
+          local_price: 3608.4,
+          fx: 1.095,
+          price_usd: 3950.18,
           verified: true,
           updated: '2025-10-30T16:00:00Z'
         },
@@ -115,11 +105,109 @@ export const api = {
           market_id: 'LONDON',
           market_name: 'London',
           local_currency: 'GBP',
-          local_price: 3155.00,
+          local_price: 3126.8,
           fx: 1.27,
-          price_usd: 4006.85,
+          price_usd: 3970.04,
           verified: true,
           updated: '2025-10-30T16:00:00Z'
+        },
+        {
+          market_id: 'NEW_YORK',
+          market_name: 'New York',
+          local_currency: 'USD',
+          local_price: 3989.65,
+          fx: 1.0,
+          price_usd: 3989.65,
+          verified: true,
+          updated: '2025-10-30T16:00:00Z'
+        },
+        {
+          market_id: 'DUBAI',
+          market_name: 'Dubai',
+          local_currency: 'AED',
+          local_price: 14662.4,
+          fx: 0.2724,
+          price_usd: 3994.39,
+          verified: true,
+          updated: '2025-10-30T16:00:00Z'
+        },
+        {
+          market_id: 'SHANGHAI',
+          market_name: 'Shanghai',
+          local_currency: 'CNY',
+          local_price: 29195.2,
+          fx: 0.0001378,
+          price_usd: 4024.9,
+          verified: true,
+          updated: '2025-10-30T16:00:00Z'
+        }
+      ],
+      history: [
+        {
+          timestamp: '2025-10-24T16:00:00Z',
+          prices: {
+            MILAN: 3924.1,
+            ZURICH: 3932.6,
+            LONDON: 3950.3,
+            NEW_YORK: 3972.8,
+            DUBAI: 3978.5,
+            SHANGHAI: 4002.7
+          }
+        },
+        {
+          timestamp: '2025-10-25T16:00:00Z',
+          prices: {
+            MILAN: 3928.4,
+            ZURICH: 3935.1,
+            LONDON: 3954.6,
+            NEW_YORK: 3978.2,
+            DUBAI: 3982.1,
+            SHANGHAI: 4005.3
+          }
+        },
+        {
+          timestamp: '2025-10-26T16:00:00Z',
+          prices: {
+            MILAN: 3932.9,
+            ZURICH: 3941.3,
+            LONDON: 3959.8,
+            NEW_YORK: 3981.6,
+            DUBAI: 3986.4,
+            SHANGHAI: 4009.8
+          }
+        },
+        {
+          timestamp: '2025-10-27T16:00:00Z',
+          prices: {
+            MILAN: 3936.5,
+            ZURICH: 3945.7,
+            LONDON: 3962.1,
+            NEW_YORK: 3984.2,
+            DUBAI: 3988.9,
+            SHANGHAI: 4015.1
+          }
+        },
+        {
+          timestamp: '2025-10-28T16:00:00Z',
+          prices: {
+            MILAN: 3940.3,
+            ZURICH: 3948.9,
+            LONDON: 3964.7,
+            NEW_YORK: 3986.7,
+            DUBAI: 3991.6,
+            SHANGHAI: 4018.4
+          }
+        },
+        {
+          timestamp: '2025-10-29T16:00:00Z',
+          prices: {
+            MILAN: 3941.21,
+            ZURICH: 3950.18,
+            LONDON: 3970.04,
+            NEW_YORK: 3989.65,
+            DUBAI: 3994.39,
+            SHANGHAI: 4024.9
+          }
         }
       ]
     };
@@ -147,6 +235,7 @@ export const api = {
   async executeOrder(orderData: {
     qty_oz: number;
     market_id: string;
+    market_name: string;
     price_usd: number;
     custody: string;
     payment_token: string;
@@ -159,8 +248,9 @@ export const api = {
       filled_qty_oz: orderData.qty_oz,
       avg_price_usd: orderData.price_usd,
       market_id: orderData.market_id,
+      market_name: orderData.market_name,
       custody: orderData.custody,
-      broker: 'DemoBroker IN',
+      broker: 'DemoBroker IT',
       timestamp: new Date().toISOString(),
       settlement_ref: 'SETT-DEMO-' + Math.random().toString(36).substring(2, 8).toUpperCase()
     };
@@ -168,13 +258,30 @@ export const api = {
 
   async getWallet(): Promise<WalletResponse> {
     await delay(300);
-    
+
     // Try to get position from localStorage
     const storedPosition = localStorage.getItem('gven_position');
     if (storedPosition) {
-      return JSON.parse(storedPosition);
+      try {
+        const parsed = JSON.parse(storedPosition) as WalletResponse;
+        if (Array.isArray(parsed.positions)) {
+          parsed.positions = parsed.positions.map((position) => ({
+            ...position,
+            market_name:
+              position.market_name ||
+              position.location
+                .replace('VAULT_', '')
+                .split('_')
+                .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+                .join(' '),
+          }));
+        }
+        return parsed;
+      } catch (error) {
+        console.error('Failed to parse stored wallet data', error);
+      }
     }
-    
+
     // Empty wallet by default
     return {
       base_currency: 'USD',
@@ -203,7 +310,8 @@ export const savePosition = (orderData: ExecuteOrderResponse, totalCost: number)
       position_id: 'POS-DEMO-1',
       asset: 'GOLD',
       qty_oz: orderData.filled_qty_oz,
-      location: 'VAULT_MUMBAI',
+      location: orderData.custody,
+      market_name: orderData.market_name,
       cost_basis_usd: totalCost,
       mark_usd: 4012.20,
       pl_usd: 4012.20 - totalCost,

@@ -54,8 +54,9 @@ export function Payment() {
         const orderResponse = await api.executeOrder({
           qty_oz: quantity,
           market_id: market.market_id,
+          market_name: market.market_name,
           price_usd: basePrice,
-          custody: 'VAULT_MUMBAI',
+          custody: 'VAULT_MILAN',
           payment_token: tokenResponse.token
         });
         
