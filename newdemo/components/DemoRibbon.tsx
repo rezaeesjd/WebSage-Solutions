@@ -8,7 +8,7 @@ export function DemoRibbon() {
         <Badge variant="secondary" className="bg-blue-800 text-white hover:bg-blue-800">
           DEMO MODE
         </Badge>
-        <span className="text-sm">Guided purchase: Gold (1 oz) → USD → Mumbai → Card → Vault</span>
+        <span className="text-sm">Guided purchase: Gold (1 oz) → USD → Milan → Card → Vault</span>
       </div>
       <div className="flex items-center gap-1 text-sm">
         <Info className="w-4 h-4" />
