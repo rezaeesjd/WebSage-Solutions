@@ -99,6 +99,15 @@ export function Wallet() {
   const profitLossPercent = position.pl_pct * 100;
   const isProfit = profitLoss >= 0;
 
+  const formatVaultLocation = (location: string) =>
+    location
+      .replace('VAULT_', '')
+      .split('_')
+      .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+      .join(' ');
+
+  const locationLabel = position.market_name || formatVaultLocation(position.location);
+
   // Get purchase date from stored order
   const storedOrder = localStorage.getItem('gven_order');
   const orderData = storedOrder ? JSON.parse(storedOrder) : null;
@@ -192,7 +201,7 @@ export function Wallet() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-slate-600" />
-                      Vault – Mumbai
+                      Vault – {locationLabel}
                     </div>
                   </TableCell>
                   <TableCell>${position.cost_basis_usd.toFixed(2)}</TableCell>
@@ -254,7 +263,7 @@ export function Wallet() {
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="w-4 h-4 text-slate-600" />
                     <span className="text-slate-600">Vault Location:</span>
-                    <span className="text-slate-900">Mumbai</span>
+                    <span className="text-slate-900">{locationLabel}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="w-4 h-4 text-slate-600" />

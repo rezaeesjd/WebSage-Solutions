@@ -164,7 +164,7 @@ export function KYC() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate('/buy/gold?market=MUMBAI&currency=USD')}
+                  onClick={() => navigate('/buy/gold?market=MILAN&currency=USD')}
                   disabled={isSubmitting}
                 >
                   ← Back
