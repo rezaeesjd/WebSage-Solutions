@@ -12,34 +12,37 @@
  */
 
 /* ===================== CONFIG (EDIT THESE) ===================== */
-const SECRET_TOKEN = 'deploytest_7uF9xK2aT6pR4qL1mZ8vW3nB0sC5eH9jP7rF6tY2uI4oN8wE3aD5gQ1lV7';
-const DEFAULT_OWNER  = 'rezaeesjd';
-const DEFAULT_REPO   = 'bokun-bookings-management';
-const DEFAULT_REF    = 'main';     // branch, tag, or full commit SHA
+$deployConfigPath = __DIR__ . '/config/deploy-config.php';
+if (!file_exists($deployConfigPath)) {
+  http_response_code(500);
+  exit('Deploy configuration missing. Expected config/deploy-config.php');
+}
+$deployConfig = require $deployConfigPath;
+
+define('SECRET_TOKEN', $deployConfig['secret_token'] ?? '');
+define('DEFAULT_OWNER', $deployConfig['default_owner'] ?? '');
+define('DEFAULT_REPO', $deployConfig['default_repo'] ?? '');
+define('DEFAULT_REF', $deployConfig['default_ref'] ?? 'main'); // branch, tag, or full commit SHA
 
 // Additional repos you can target with ?repo=key
-const ALT_REPO_MAP   = [
-  'github-updater' => ['owner' => 'rezaeesjd', 'repo' => 'github-updater', 'ref' => 'main'],
-];
+define('ALT_REPO_MAP', $deployConfig['alt_repos'] ?? []);
 
 // Deployment options
-const SITE_ROOT      = __DIR__;    // where the website lives (this file’s directory)
-const KEEP_BACKUP    = true;       // keep backup of overwritten/removed items
-const BACKUP_DIR     = 'backups';  // folder under SITE_ROOT for backups
-const PRUNE_REMOVED  = true;       // delete files/dirs no longer in repo
-const TIMEOUT_SEC    = 300;        // network timeout
+define('SITE_ROOT', $deployConfig['site_root'] ?? __DIR__);    // where the website lives (this file’s directory)
+define('KEEP_BACKUP', (bool)($deployConfig['keep_backup'] ?? true));       // keep backup of overwritten/removed items
+define('BACKUP_DIR', $deployConfig['backup_dir'] ?? 'backups');  // folder under SITE_ROOT for backups
+define('PRUNE_REMOVED', (bool)($deployConfig['prune_removed'] ?? true));       // delete files/dirs no longer in repo
+define('TIMEOUT_SEC', (int)($deployConfig['timeout_sec'] ?? 300));        // network timeout
 
 // Exclusions: relative paths under SITE_ROOT that should never be touched
-const EXCLUDES       = [
-  'deploy.php',     // keep this script safe
-  '.git', '.github',
-  BACKUP_DIR,       // keep backups
-  // Add your local-only folders here (examples):
-  // 'uploads', 'cache', 'env'
-];
+$configuredExcludes = $deployConfig['excludes'] ?? [];
+if (!in_array(BACKUP_DIR, $configuredExcludes, true)) {
+  $configuredExcludes[] = BACKUP_DIR;
+}
+define('EXCLUDES', $configuredExcludes);
 
 // Private repos only: fine-grained GitHub token with contents:read
-const GITHUB_TOKEN   = ''; // leave empty if both repos are public
+define('GITHUB_TOKEN', $deployConfig['github_token'] ?? ''); // leave empty if both repos are public
 /* ================== END CONFIG (DON'T EDIT BELOW) ================== */
 
 // ---------- Access control: token via Header, POST, or GET ----------

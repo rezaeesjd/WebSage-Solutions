@@ -1,21 +1,44 @@
+<?php
+declare(strict_types=1);
+
+require __DIR__ . '/../lib/settings.php';
+$settings = load_site_settings();
+
+function esc(string $value): string
+{
+    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
+
+$siteTitle       = $settings['site_title'] ?? 'GitHub Plugin Installer & Updater | Websage Solutions';
+$metaDescription = $settings['meta_description'] ?? '';
+$heroEyebrow     = $settings['hero_eyebrow'] ?? '';
+$heroHeading     = $settings['hero_heading'] ?? '';
+$heroBody        = $settings['hero_body'] ?? '';
+$downloadLabel   = $settings['download_label'] ?? 'Download Plugin';
+$githubLabel     = $settings['github_label'] ?? 'View on GitHub';
+$downloadUrl     = $settings['cta_download_url'] ?? '#';
+$githubUrl       = $settings['cta_github_url'] ?? '#';
+$canonicalUrl    = $settings['canonical_url'] ?? '';
+$ogImage         = $settings['og_image'] ?? '';
+$contactEmail    = $settings['contact_email'] ?? 'lab@websagesolutions.com';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>GitHub Plugin Installer &amp; Updater | Websage Solutions</title>
+    <title><?= esc($siteTitle) ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Install or refresh any WordPress plugin straight from GitHub without leaving wp-admin. Manage repositories, trigger self-updates, and automate releases with Websage Solutions' GitHub Plugin Installer &amp; Updater.">
-    <meta name="keywords" content="GitHub WordPress plugin installer, GitHub plugin updater, Websage Solutions Lab, install WordPress plugin from GitHub, Managed Plugins table, WordPress GitHub deployment">
-    <link rel="canonical" href="https://websage.solutions/github-plugin-installer-and-updater/">
+    <meta name="description" content="<?= esc($metaDescription) ?>">
+    <?php if ($canonicalUrl): ?><link rel="canonical" href="<?= esc($canonicalUrl) ?>"><?php endif; ?>
     <meta property="og:type" content="website">
-    <meta property="og:title" content="GitHub Plugin Installer &amp; Updater by Websage Solutions">
-    <meta property="og:description" content="Deploy and update WordPress plugins directly from GitHub repositories with private token support and self-updates.">
-    <meta property="og:url" content="https://websage.solutions/github-plugin-installer-and-updater/">
-    <meta property="og:image" content="https://websage.solutions/assets/github-updater-og.png">
+    <meta property="og:title" content="<?= esc($siteTitle) ?>">
+    <meta property="og:description" content="<?= esc($metaDescription) ?>">
+    <?php if ($canonicalUrl): ?><meta property="og:url" content="<?= esc($canonicalUrl) ?>"><?php endif; ?>
+    <?php if ($ogImage): ?><meta property="og:image" content="<?= esc($ogImage) ?>"><?php endif; ?>
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="GitHub Plugin Installer &amp; Updater | Websage Solutions">
-    <meta name="twitter:description" content="Install, manage, and refresh WordPress plugins straight from GitHub repositories.">
-    <meta name="twitter:image" content="https://websage.solutions/assets/github-updater-og.png">
+    <meta name="twitter:title" content="<?= esc($siteTitle) ?>">
+    <meta name="twitter:description" content="<?= esc($metaDescription) ?>">
+    <?php if ($ogImage): ?><meta name="twitter:image" content="<?= esc($ogImage) ?>"><?php endif; ?>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <style>
         :root {
@@ -240,12 +263,14 @@
 </head>
 <body>
     <header>
-        <p class="eyebrow">Publisher: Websage Solutions Lab • Company: Websage Solutions</p>
-        <h1>Github Plugin Installer &amp; Updater for WordPress</h1>
-        <p>Install or refresh any WordPress plugin straight from GitHub without leaving wp-admin. Map installed plugins to their repositories, authorize private downloads with a personal access token, and keep this helper plugin updated from the same dashboard.</p>
+        <?php if ($heroEyebrow): ?>
+            <p class="eyebrow"><?= esc($heroEyebrow) ?></p>
+        <?php endif; ?>
+        <h1><?= esc($heroHeading) ?></h1>
+        <p><?= esc($heroBody) ?></p>
         <div class="cta-row">
-            <a class="cta-button cta-primary" href="https://github.com/rezaeesjd/github-updater/archive/refs/heads/main.zip">Download Plugin</a>
-            <a class="cta-button cta-secondary" href="https://github.com/rezaeesjd/github-updater">View on GitHub</a>
+            <a class="cta-button cta-primary" href="<?= esc($downloadUrl) ?>"><?= esc($downloadLabel) ?></a>
+            <a class="cta-button cta-secondary" href="<?= esc($githubUrl) ?>"><?= esc($githubLabel) ?></a>
         </div>
     </header>
     <main>
@@ -351,7 +376,7 @@
         </section>
         <section id="contact">
             <h2>Need help?</h2>
-            <p>Have a question about GitHub authentication, custom workflows, or managed deployments? Email <a href="mailto:lab@websagesolutions.com">lab@websagesolutions.com</a> and the Websage Solutions Lab team will walk you through the setup.</p>
+            <p>Have a question about GitHub authentication, custom workflows, or managed deployments? Email <a href="mailto:<?= esc($contactEmail) ?>"><?= esc($contactEmail) ?></a> and the Websage Solutions Lab team will walk you through the setup.</p>
         </section>
     </main>
     <footer>
