@@ -1,0 +1,14 @@
+{
+    "site_title": "GitHub Plugin Installer & Updater | Websage Solutions",
+    "meta_description": "Install or refresh any WordPress plugin straight from GitHub without leaving wp-admin.",
+    "hero_eyebrow": "Publisher: Websage Solutions Lab \u2022 Company: Websage Solutions",
+    "hero_heading": "Github Plugin Installer & Updater for WordPress",
+    "hero_body": "Install or refresh any WordPress plugin straight from GitHub without leaving wp-admin. Map installed plugins to their repositories, authorize private downloads with a personal access token, and keep this helper plugin updated from the same dashboard.",
+    "download_label": "Download Plugin",
+    "github_label": "View on GitHub",
+    "cta_download_url": "https://github.com/rezaeesjd/github-updater/archive/refs/heads/main.zip",
+    "cta_github_url": "https://github.com/rezaeesjd/github-updater",
+    "canonical_url": "https://websage.solutions/github-plugin-installer-and-updater/",
+    "og_image": "https://websage.solutions/assets/github-updater-og.png",
+    "contact_email": "lab@websagesolutions.com"
+}
