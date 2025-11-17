@@ -1,10 +1,32 @@
+<?php
+declare(strict_types=1);
+
+require __DIR__ . '/lib/settings.php';
+
+$settings = load_site_settings();
+$site = $settings['site'] ?? [];
+$plugins = $settings['plugins'] ?? [];
+
+function esc(string $value): string
+{
+    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
+
+$siteTitle = $site['site_title'] ?? 'Websage Solutions Plugins | Websage Solutions';
+$metaDescription = $site['meta_description'] ?? '';
+$heroEyebrow = $site['hero_eyebrow'] ?? '';
+$heroHeading = $site['hero_heading'] ?? 'WordPress helpers from Websage Solutions';
+$heroBody = $site['hero_body'] ?? '';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Websage Solutions Plugins</title>
+    <title><?= esc($siteTitle) ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Explore Websage Solutions' lightweight WordPress utilities for GitHub-powered deployments and Bokun booking imports.">
+    <?php if ($metaDescription): ?>
+        <meta name="description" content="<?= esc($metaDescription) ?>">
+    <?php endif; ?>
     <style>
         :root {
             color-scheme: light dark;
@@ -44,6 +66,13 @@
             margin: 0;
             color: rgba(248, 250, 252, 0.8);
         }
+        .eyebrow {
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            font-size: 0.78rem;
+            margin-bottom: 12px;
+            color: rgba(248, 250, 252, 0.7);
+        }
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -55,13 +84,16 @@
             border-radius: 20px;
             padding: 28px;
             box-shadow: 0 20px 45px rgba(15, 23, 42, 0.35);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
         .card h2 {
-            margin: 0 0 8px;
+            margin: 0;
             font-size: 1.4rem;
         }
         .card p {
-            margin: 0 0 16px;
+            margin: 0;
             color: var(--muted);
             line-height: 1.6;
         }
@@ -82,32 +114,25 @@
 <body>
     <main>
         <header>
-            <h1>Websage Solutions Lab</h1>
-            <p>Choose a plugin landing page below.</p>
+            <?php if ($heroEyebrow): ?><div class="eyebrow"><?= esc($heroEyebrow) ?></div><?php endif; ?>
+            <h1><?= esc($heroHeading) ?></h1>
+            <p><?= esc($heroBody) ?></p>
         </header>
         <div class="grid">
-            <article class="card">
-                <h2>GitHub Plugin Installer &amp; Updater</h2>
-                <p>Install and refresh WordPress plugins directly from GitHub, map installed plugins to repositories, and authorize private downloads with a token.</p>
-                <a href="/github-plugin-installer-and-updater/">
-                    Visit page
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M7 17 17 7" />
-                        <path d="M7 7h10v10" />
-                    </svg>
-                </a>
-            </article>
-            <article class="card">
-                <h2>Import Bokun to WP Ecommerce and Custom Fields</h2>
-                <p>Pull Bokun reservations into WordPress as first-class posts, power dashboards, and expose booking history tables with CSV export.</p>
-                <a href="/import-bokun-to-wp-ecommerce-and-custom-fields/">
-                    Visit page
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M7 17 17 7" />
-                        <path d="M7 7h10v10" />
-                    </svg>
-                </a>
-            </article>
+            <?php foreach ($plugins as $plugin): ?>
+                <?php if (empty($plugin['slug'])) { continue; } ?>
+                <article class="card">
+                    <h2><?= esc($plugin['card_title'] ?? $plugin['slug']) ?></h2>
+                    <p><?= esc($plugin['card_excerpt'] ?? '') ?></p>
+                    <a href="/<?= esc($plugin['slug']) ?>/">
+                        Visit page
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M7 17 17 7" />
+                            <path d="M7 7h10v10" />
+                        </svg>
+                    </a>
+                </article>
+            <?php endforeach; ?>
         </div>
     </main>
 </body>

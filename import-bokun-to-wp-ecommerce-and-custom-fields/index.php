@@ -1,23 +1,29 @@
 <?php
 declare(strict_types=1);
 
+require __DIR__ . '/../lib/settings.php';
+
+$config = get_plugin_page_settings('import-bokun-to-wp-ecommerce-and-custom-fields');
+$siteSettings = $config['site'];
+$pluginSettings = $config['plugin'];
+
 function esc(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
 
-$siteTitle       = 'Import Bokun to WP Ecommerce and Custom Fields | Websage Solutions';
-$metaDescription = 'Pull reservations from the Bokun API, store them as native WordPress posts, and work with booking data inside WP Ecommerce with custom fields, dashboards, and shortcodes.';
-$heroEyebrow     = 'WordPress Plugin • Built by Websage Solutions Lab';
-$heroHeading     = 'Import Bokun to WP Ecommerce and Custom Fields';
-$heroBody        = 'Bokun Bookings Management lets tour and activity operators pull reservations straight from the Bokun API, save them as custom posts, and expose dashboards, DataTables history, and shortcodes that plug into WP Ecommerce workflows.';
-$downloadLabel   = 'Download Plugin';
-$githubLabel     = 'View on GitHub';
-$downloadUrl     = 'https://github.com/rezaeesjd/bokun-bookings-management/archive/refs/heads/main.zip';
-$githubUrl       = 'https://github.com/rezaeesjd/bokun-bookings-management';
-$canonicalUrl    = 'https://websage.solutions/import-bokun-to-wp-ecommerce-and-custom-fields/';
-$ogImage         = 'https://websage.solutions/assets/bokun-bookings-management-og.png';
-$contactEmail    = 'lab@websagesolutions.com';
+$siteTitle       = $pluginSettings['site_title'] ?? 'Import Bokun to WP Ecommerce and Custom Fields | Websage Solutions';
+$metaDescription = $pluginSettings['meta_description'] ?? '';
+$heroEyebrow     = $pluginSettings['hero_eyebrow'] ?? '';
+$heroHeading     = $pluginSettings['hero_heading'] ?? '';
+$heroBody        = $pluginSettings['hero_body'] ?? '';
+$downloadLabel   = $pluginSettings['download_label'] ?? 'Download Plugin';
+$githubLabel     = $pluginSettings['github_label'] ?? 'View on GitHub';
+$downloadUrl     = $pluginSettings['cta_download_url'] ?? '#';
+$githubUrl       = $pluginSettings['cta_github_url'] ?? '#';
+$canonicalUrl    = $pluginSettings['canonical_url'] ?? '';
+$ogImage         = $pluginSettings['og_image'] ?? '';
+$contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
 ?>
 <!DOCTYPE html>
 <html lang="en">

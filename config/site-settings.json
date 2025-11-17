@@ -1,14 +1,44 @@
 {
-    "site_title": "GitHub Plugin Installer & Updater | Websage Solutions",
-    "meta_description": "Install or refresh any WordPress plugin straight from GitHub without leaving wp-admin.",
-    "hero_eyebrow": "Publisher: Websage Solutions Lab \u2022 Company: Websage Solutions",
-    "hero_heading": "Github Plugin Installer & Updater for WordPress",
-    "hero_body": "Install or refresh any WordPress plugin straight from GitHub without leaving wp-admin. Map installed plugins to their repositories, authorize private downloads with a personal access token, and keep this helper plugin updated from the same dashboard.",
-    "download_label": "Download Plugin",
-    "github_label": "View on GitHub",
-    "cta_download_url": "https://github.com/rezaeesjd/github-updater/archive/refs/heads/main.zip",
-    "cta_github_url": "https://github.com/rezaeesjd/github-updater",
-    "canonical_url": "https://websage.solutions/github-plugin-installer-and-updater/",
-    "og_image": "https://websage.solutions/assets/github-updater-og.png",
-    "contact_email": "lab@websagesolutions.com"
+    "site": {
+        "site_title": "Websage Solutions Plugins | Websage Solutions",
+        "meta_description": "Explore Websage Solutions' lightweight WordPress utilities powered by GitHub deployments and Bokun booking imports.",
+        "hero_eyebrow": "Websage Solutions Lab",
+        "hero_heading": "Choose a plugin landing page",
+        "hero_body": "Pick a helper plugin below to access docs, download links, and GitHub repositories.",
+        "contact_email": "lab@websagesolutions.com"
+    },
+    "plugins": {
+        "github-plugin-installer-and-updater": {
+            "slug": "github-plugin-installer-and-updater",
+            "card_title": "GitHub Plugin Installer & Updater",
+            "card_excerpt": "Install and refresh WordPress plugins directly from GitHub, map installed plugins to repositories, and authorize private downloads with a token.",
+            "site_title": "GitHub Plugin Installer & Updater | Websage Solutions",
+            "meta_description": "Install or refresh any WordPress plugin straight from GitHub without leaving wp-admin.",
+            "hero_eyebrow": "Publisher: Websage Solutions Lab • Company: Websage Solutions",
+            "hero_heading": "Github Plugin Installer & Updater for WordPress",
+            "hero_body": "Install or refresh any WordPress plugin straight from GitHub without leaving wp-admin. Map installed plugins to their repositories, authorize private downloads with a personal access token, and keep this helper plugin updated from the same dashboard.",
+            "download_label": "Download Plugin",
+            "github_label": "View on GitHub",
+            "cta_download_url": "https://github.com/rezaeesjd/github-updater/archive/refs/heads/main.zip",
+            "cta_github_url": "https://github.com/rezaeesjd/github-updater",
+            "canonical_url": "https://websage.solutions/github-plugin-installer-and-updater/",
+            "og_image": "https://websage.solutions/assets/github-updater-og.png"
+        },
+        "import-bokun-to-wp-ecommerce-and-custom-fields": {
+            "slug": "import-bokun-to-wp-ecommerce-and-custom-fields",
+            "card_title": "Import Bokun to WP Ecommerce and Custom Fields",
+            "card_excerpt": "Pull Bokun reservations into WordPress as first-class posts, power dashboards, and expose booking history tables with CSV export.",
+            "site_title": "Import Bokun to WP Ecommerce and Custom Fields | Websage Solutions",
+            "meta_description": "Pull reservations from the Bokun API, store them as native WordPress posts, and work with booking data inside WP Ecommerce with custom fields, dashboards, and shortcodes.",
+            "hero_eyebrow": "WordPress Plugin • Built by Websage Solutions Lab",
+            "hero_heading": "Import Bokun to WP Ecommerce and Custom Fields",
+            "hero_body": "Bokun Bookings Management lets tour and activity operators pull reservations straight from the Bokun API, save them as custom posts, and expose dashboards, DataTables history, and shortcodes that plug into WP Ecommerce workflows.",
+            "download_label": "Download Plugin",
+            "github_label": "View on GitHub",
+            "cta_download_url": "https://github.com/rezaeesjd/bokun-bookings-management/archive/refs/heads/main.zip",
+            "cta_github_url": "https://github.com/rezaeesjd/bokun-bookings-management",
+            "canonical_url": "https://websage.solutions/import-bokun-to-wp-ecommerce-and-custom-fields/",
+            "og_image": "https://websage.solutions/assets/bokun-bookings-management-og.png"
+        }
+    }
 }
