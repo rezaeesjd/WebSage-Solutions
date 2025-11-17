@@ -164,8 +164,8 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
         }
         main {
             max-width: 1140px;
-            margin: -56px auto 0;
-            padding: 0 20px 88px;
+            margin: 0 auto;
+            padding: 56px 20px 88px;
         }
         section {
             background: var(--card-bg);
