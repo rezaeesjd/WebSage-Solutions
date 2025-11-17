@@ -2,25 +2,27 @@
 declare(strict_types=1);
 
 require __DIR__ . '/../lib/settings.php';
-$settings = load_site_settings();
+$config = get_plugin_page_settings('github-plugin-installer-and-updater');
+$siteSettings = $config['site'];
+$pluginSettings = $config['plugin'];
 
 function esc(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
 
-$siteTitle       = $settings['site_title'] ?? 'GitHub Plugin Installer & Updater | Websage Solutions';
-$metaDescription = $settings['meta_description'] ?? '';
-$heroEyebrow     = $settings['hero_eyebrow'] ?? '';
-$heroHeading     = $settings['hero_heading'] ?? '';
-$heroBody        = $settings['hero_body'] ?? '';
-$downloadLabel   = $settings['download_label'] ?? 'Download Plugin';
-$githubLabel     = $settings['github_label'] ?? 'View on GitHub';
-$downloadUrl     = $settings['cta_download_url'] ?? '#';
-$githubUrl       = $settings['cta_github_url'] ?? '#';
-$canonicalUrl    = $settings['canonical_url'] ?? '';
-$ogImage         = $settings['og_image'] ?? '';
-$contactEmail    = $settings['contact_email'] ?? 'lab@websagesolutions.com';
+$siteTitle       = $pluginSettings['site_title'] ?? 'GitHub Plugin Installer & Updater | Websage Solutions';
+$metaDescription = $pluginSettings['meta_description'] ?? '';
+$heroEyebrow     = $pluginSettings['hero_eyebrow'] ?? '';
+$heroHeading     = $pluginSettings['hero_heading'] ?? '';
+$heroBody        = $pluginSettings['hero_body'] ?? '';
+$downloadLabel   = $pluginSettings['download_label'] ?? 'Download Plugin';
+$githubLabel     = $pluginSettings['github_label'] ?? 'View on GitHub';
+$downloadUrl     = $pluginSettings['cta_download_url'] ?? '#';
+$githubUrl       = $pluginSettings['cta_github_url'] ?? '#';
+$canonicalUrl    = $pluginSettings['canonical_url'] ?? '';
+$ogImage         = $pluginSettings['og_image'] ?? '';
+$contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
 ?>
 <!DOCTYPE html>
 <html lang="en">

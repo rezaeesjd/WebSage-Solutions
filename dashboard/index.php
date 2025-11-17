@@ -5,6 +5,8 @@ session_start();
 require __DIR__ . '/../lib/settings.php';
 
 $settings = load_site_settings();
+$siteSettings = $settings['site'] ?? [];
+$pluginSettings = $settings['plugins'] ?? [];
 $deployConfigPath = __DIR__ . '/../config/deploy-config.php';
 $deployConfig = file_exists($deployConfigPath) ? require $deployConfigPath : [];
 $secretToken = $deployConfig['secret_token'] ?? '';
@@ -115,34 +117,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $flash['error'][] = 'Session expired. Refresh and try again.';
     } else {
         if ($action === 'save_settings') {
-            $updated = [
-                'site_title'       => $_POST['site_title'] ?? '',
-                'meta_description' => $_POST['meta_description'] ?? '',
-                'hero_eyebrow'     => $_POST['hero_eyebrow'] ?? '',
-                'hero_heading'     => $_POST['hero_heading'] ?? '',
-                'hero_body'        => $_POST['hero_body'] ?? '',
-                'download_label'   => $_POST['download_label'] ?? '',
-                'github_label'     => $_POST['github_label'] ?? '',
-                'cta_download_url' => sanitize_url($_POST['cta_download_url'] ?? ''),
-                'cta_github_url'   => sanitize_url($_POST['cta_github_url'] ?? ''),
-                'canonical_url'    => sanitize_url($_POST['canonical_url'] ?? ''),
-                'og_image'         => sanitize_url($_POST['og_image'] ?? ''),
-                'contact_email'    => trim($_POST['contact_email'] ?? ''),
+            $incomingSite = $_POST['site'] ?? [];
+            $sitePayload = [
+                'site_title'       => trim($incomingSite['site_title'] ?? ''),
+                'meta_description' => trim($incomingSite['meta_description'] ?? ''),
+                'hero_eyebrow'     => trim($incomingSite['hero_eyebrow'] ?? ''),
+                'hero_heading'     => trim($incomingSite['hero_heading'] ?? ''),
+                'hero_body'        => trim($incomingSite['hero_body'] ?? ''),
+                'contact_email'    => trim($incomingSite['contact_email'] ?? ''),
             ];
 
-            $missing = [];
+            $siteMissing = [];
             foreach (['site_title', 'hero_heading', 'hero_body'] as $requiredKey) {
-                if ($updated[$requiredKey] === '') {
-                    $missing[] = $requiredKey;
+                if ($sitePayload[$requiredKey] === '') {
+                    $siteMissing[] = $requiredKey;
                 }
             }
-            if ($updated['cta_download_url'] === '' || $updated['cta_github_url'] === '') {
-                $flash['error'][] = 'Both Download URL and GitHub URL must be valid links.';
-            } elseif (!empty($missing)) {
-                $flash['error'][] = 'Please fill out all required fields.';
+
+            $pluginsPayload = [];
+            $pluginErrors = [];
+            $incomingPlugins = $_POST['plugins'] ?? [];
+            if (!is_array($incomingPlugins)) {
+                $incomingPlugins = [];
+            }
+
+            foreach ($incomingPlugins as $slug => $pluginData) {
+                if (!is_array($pluginData)) {
+                    continue;
+                }
+                $slugKey = sanitize_slug((string)($pluginData['slug'] ?? $slug));
+                if ($slugKey === '') {
+                    $pluginErrors[] = 'Each plugin entry must include a slug (letters, numbers, and hyphens).';
+                    continue;
+                }
+
+                $pluginPayload = [
+                    'slug'             => $slugKey,
+                    'card_title'       => trim($pluginData['card_title'] ?? ''),
+                    'card_excerpt'     => trim($pluginData['card_excerpt'] ?? ''),
+                    'site_title'       => trim($pluginData['site_title'] ?? ''),
+                    'meta_description' => trim($pluginData['meta_description'] ?? ''),
+                    'hero_eyebrow'     => trim($pluginData['hero_eyebrow'] ?? ''),
+                    'hero_heading'     => trim($pluginData['hero_heading'] ?? ''),
+                    'hero_body'        => trim($pluginData['hero_body'] ?? ''),
+                    'download_label'   => trim($pluginData['download_label'] ?? 'Download Plugin'),
+                    'github_label'     => trim($pluginData['github_label'] ?? 'View on GitHub'),
+                    'cta_download_url' => sanitize_url($pluginData['cta_download_url'] ?? ''),
+                    'cta_github_url'   => sanitize_url($pluginData['cta_github_url'] ?? ''),
+                    'canonical_url'    => sanitize_url($pluginData['canonical_url'] ?? ''),
+                    'og_image'         => sanitize_url($pluginData['og_image'] ?? ''),
+                ];
+
+                if ($pluginPayload['download_label'] === '') {
+                    $pluginPayload['download_label'] = 'Download Plugin';
+                }
+                if ($pluginPayload['github_label'] === '') {
+                    $pluginPayload['github_label'] = 'View on GitHub';
+                }
+
+                $requiredPluginKeys = ['card_title', 'card_excerpt', 'site_title', 'hero_heading', 'hero_body'];
+                $missingPluginKeys = [];
+                foreach ($requiredPluginKeys as $requiredKey) {
+                    if ($pluginPayload[$requiredKey] === '') {
+                        $missingPluginKeys[] = $requiredKey;
+                    }
+                }
+
+                if ($pluginPayload['cta_download_url'] === '' || $pluginPayload['cta_github_url'] === '') {
+                    $pluginErrors[] = sprintf('Plugin "%s" needs valid download and GitHub URLs.', $pluginPayload['card_title'] ?: $slugKey);
+                } elseif (!empty($missingPluginKeys)) {
+                    $pluginErrors[] = sprintf('Plugin "%s" is missing: %s', $pluginPayload['card_title'] ?: $slugKey, implode(', ', $missingPluginKeys));
+                }
+
+                $pluginsPayload[$slugKey] = $pluginPayload;
+            }
+
+            if (!empty($siteMissing)) {
+                $flash['error'][] = 'Please fill out all required global fields (title and hero content).';
+            } elseif (!empty($pluginErrors)) {
+                foreach ($pluginErrors as $message) {
+                    $flash['error'][] = $message;
+                }
+            } elseif (empty($pluginsPayload)) {
+                $flash['error'][] = 'At least one plugin page must be configured.';
             } else {
-                save_site_settings($updated);
+                save_site_settings([
+                    'site'    => $sitePayload,
+                    'plugins' => $pluginsPayload,
+                ]);
                 $settings = load_site_settings();
+                $siteSettings = $settings['site'] ?? [];
+                $pluginSettings = $settings['plugins'] ?? [];
                 $flash['success'][] = 'Settings saved.';
             }
         } elseif ($action === 'deploy_now') {
@@ -229,6 +294,7 @@ function h(string $value): string
         }
         input[type="text"],
         input[type="url"],
+        input[type="email"],
         textarea {
             width: 100%;
             padding: 12px;
@@ -245,6 +311,36 @@ function h(string $value): string
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .help-text {
+            color: var(--muted);
+            margin: -6px 0 16px;
+            font-size: 0.95rem;
+        }
+        .plugin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            margin-bottom: 16px;
+        }
+        .plugin-card {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 16px;
+            background: #fff;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+        }
+        .plugin-card textarea {
+            min-height: 70px;
+        }
+        .plugin-card .remove-plugin {
+            background: transparent;
+            color: #b91c1c;
+            border: 1px dashed rgba(185, 28, 28, 0.4);
+            padding: 8px 14px;
+            border-radius: 10px;
+            margin-top: 8px;
         }
         button {
             border: none;
@@ -310,61 +406,166 @@ function h(string $value): string
     <main>
         <section>
             <h2>Global Options</h2>
-            <form method="post">
+            <form method="post" id="settings-form">
                 <input type="hidden" name="csrf_token" value="<?= h($csrfToken) ?>">
                 <input type="hidden" name="action" value="save_settings">
                 <div class="field">
                     <label for="site_title">Website Title</label>
-                    <input type="text" id="site_title" name="site_title" value="<?= h($settings['site_title']) ?>" required>
+                    <input type="text" id="site_title" name="site[site_title]" value="<?= h($siteSettings['site_title'] ?? '') ?>" required>
                 </div>
                 <div class="field">
                     <label for="meta_description">Meta Description</label>
-                    <textarea id="meta_description" name="meta_description"><?= h($settings['meta_description']) ?></textarea>
+                    <textarea id="meta_description" name="site[meta_description]"><?= h($siteSettings['meta_description'] ?? '') ?></textarea>
                 </div>
                 <div class="field">
                     <label for="hero_eyebrow">Header Eyebrow</label>
-                    <input type="text" id="hero_eyebrow" name="hero_eyebrow" value="<?= h($settings['hero_eyebrow']) ?>">
+                    <input type="text" id="hero_eyebrow" name="site[hero_eyebrow]" value="<?= h($siteSettings['hero_eyebrow'] ?? '') ?>">
                 </div>
                 <div class="field">
                     <label for="hero_heading">Hero Heading</label>
-                    <input type="text" id="hero_heading" name="hero_heading" value="<?= h($settings['hero_heading']) ?>" required>
+                    <input type="text" id="hero_heading" name="site[hero_heading]" value="<?= h($siteSettings['hero_heading'] ?? '') ?>" required>
                 </div>
                 <div class="field">
                     <label for="hero_body">Hero Body</label>
-                    <textarea id="hero_body" name="hero_body" required><?= h($settings['hero_body']) ?></textarea>
-                </div>
-                <div class="field">
-                    <label for="download_label">Download Button Label</label>
-                    <input type="text" id="download_label" name="download_label" value="<?= h($settings['download_label']) ?>">
-                </div>
-                <div class="field">
-                    <label for="cta_download_url">Download URL</label>
-                    <input type="url" id="cta_download_url" name="cta_download_url" value="<?= h($settings['cta_download_url']) ?>" required>
-                </div>
-                <div class="field">
-                    <label for="github_label">GitHub Button Label</label>
-                    <input type="text" id="github_label" name="github_label" value="<?= h($settings['github_label']) ?>">
-                </div>
-                <div class="field">
-                    <label for="cta_github_url">GitHub Repository URL</label>
-                    <input type="url" id="cta_github_url" name="cta_github_url" value="<?= h($settings['cta_github_url']) ?>" required>
-                </div>
-                <div class="field">
-                    <label for="canonical_url">Canonical URL</label>
-                    <input type="url" id="canonical_url" name="canonical_url" value="<?= h($settings['canonical_url']) ?>">
-                </div>
-                <div class="field">
-                    <label for="og_image">OG Image URL</label>
-                    <input type="url" id="og_image" name="og_image" value="<?= h($settings['og_image']) ?>">
+                    <textarea id="hero_body" name="site[hero_body]" required><?= h($siteSettings['hero_body'] ?? '') ?></textarea>
                 </div>
                 <div class="field">
                     <label for="contact_email">Contact Email</label>
-                    <input type="text" id="contact_email" name="contact_email" value="<?= h($settings['contact_email']) ?>">
+                    <input type="email" id="contact_email" name="site[contact_email]" value="<?= h($siteSettings['contact_email'] ?? '') ?>">
                 </div>
+
+                <h3>Plugin Landing Pages</h3>
+                <p class="help-text">Manage hero copy, metadata, and download links for each plugin page.</p>
+                <div class="plugin-grid" id="plugin-grid">
+                    <?php foreach ($pluginSettings as $slug => $plugin): ?>
+                        <article class="plugin-card" data-slug="<?= h($slug) ?>">
+                            <div class="field">
+                                <label>Plugin Slug</label>
+                                <input type="text" name="plugins[<?= h($slug) ?>][slug]" value="<?= h($plugin['slug'] ?? $slug) ?>" required>
+                            </div>
+                            <div class="field">
+                                <label>Homepage Card Title</label>
+                                <input type="text" name="plugins[<?= h($slug) ?>][card_title]" value="<?= h($plugin['card_title'] ?? '') ?>" required>
+                            </div>
+                            <div class="field">
+                                <label>Homepage Card Summary</label>
+                                <textarea name="plugins[<?= h($slug) ?>][card_excerpt]" required><?= h($plugin['card_excerpt'] ?? '') ?></textarea>
+                            </div>
+                            <div class="field">
+                                <label>Page Title</label>
+                                <input type="text" name="plugins[<?= h($slug) ?>][site_title]" value="<?= h($plugin['site_title'] ?? '') ?>" required>
+                            </div>
+                            <div class="field">
+                                <label>Meta Description</label>
+                                <textarea name="plugins[<?= h($slug) ?>][meta_description]"><?= h($plugin['meta_description'] ?? '') ?></textarea>
+                            </div>
+                            <div class="field">
+                                <label>Hero Eyebrow</label>
+                                <input type="text" name="plugins[<?= h($slug) ?>][hero_eyebrow]" value="<?= h($plugin['hero_eyebrow'] ?? '') ?>">
+                            </div>
+                            <div class="field">
+                                <label>Hero Heading</label>
+                                <input type="text" name="plugins[<?= h($slug) ?>][hero_heading]" value="<?= h($plugin['hero_heading'] ?? '') ?>" required>
+                            </div>
+                            <div class="field">
+                                <label>Hero Body</label>
+                                <textarea name="plugins[<?= h($slug) ?>][hero_body]" required><?= h($plugin['hero_body'] ?? '') ?></textarea>
+                            </div>
+                            <div class="field">
+                                <label>Download Button Label</label>
+                                <input type="text" name="plugins[<?= h($slug) ?>][download_label]" value="<?= h($plugin['download_label'] ?? '') ?>">
+                            </div>
+                            <div class="field">
+                                <label>Download URL</label>
+                                <input type="url" name="plugins[<?= h($slug) ?>][cta_download_url]" value="<?= h($plugin['cta_download_url'] ?? '') ?>" required>
+                            </div>
+                            <div class="field">
+                                <label>GitHub Button Label</label>
+                                <input type="text" name="plugins[<?= h($slug) ?>][github_label]" value="<?= h($plugin['github_label'] ?? '') ?>">
+                            </div>
+                            <div class="field">
+                                <label>GitHub Repository URL</label>
+                                <input type="url" name="plugins[<?= h($slug) ?>][cta_github_url]" value="<?= h($plugin['cta_github_url'] ?? '') ?>" required>
+                            </div>
+                            <div class="field">
+                                <label>Canonical URL</label>
+                                <input type="url" name="plugins[<?= h($slug) ?>][canonical_url]" value="<?= h($plugin['canonical_url'] ?? '') ?>">
+                            </div>
+                            <div class="field">
+                                <label>OG Image URL</label>
+                                <input type="url" name="plugins[<?= h($slug) ?>][og_image]" value="<?= h($plugin['og_image'] ?? '') ?>">
+                            </div>
+                            <button type="button" class="remove-plugin">Remove Plugin</button>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+
                 <div class="button-row">
+                    <button type="button" class="btn-secondary" id="add-plugin">Add Plugin</button>
                     <button type="submit" class="btn-primary">Save Settings</button>
                 </div>
             </form>
+            <template id="plugin-template">
+                <article class="plugin-card">
+                    <div class="field">
+                        <label>Plugin Slug</label>
+                        <input type="text" data-field="slug" required>
+                    </div>
+                    <div class="field">
+                        <label>Homepage Card Title</label>
+                        <input type="text" data-field="card_title" required>
+                    </div>
+                    <div class="field">
+                        <label>Homepage Card Summary</label>
+                        <textarea data-field="card_excerpt" required></textarea>
+                    </div>
+                    <div class="field">
+                        <label>Page Title</label>
+                        <input type="text" data-field="site_title" required>
+                    </div>
+                    <div class="field">
+                        <label>Meta Description</label>
+                        <textarea data-field="meta_description"></textarea>
+                    </div>
+                    <div class="field">
+                        <label>Hero Eyebrow</label>
+                        <input type="text" data-field="hero_eyebrow">
+                    </div>
+                    <div class="field">
+                        <label>Hero Heading</label>
+                        <input type="text" data-field="hero_heading" required>
+                    </div>
+                    <div class="field">
+                        <label>Hero Body</label>
+                        <textarea data-field="hero_body" required></textarea>
+                    </div>
+                    <div class="field">
+                        <label>Download Button Label</label>
+                        <input type="text" data-field="download_label">
+                    </div>
+                    <div class="field">
+                        <label>Download URL</label>
+                        <input type="url" data-field="cta_download_url" required>
+                    </div>
+                    <div class="field">
+                        <label>GitHub Button Label</label>
+                        <input type="text" data-field="github_label">
+                    </div>
+                    <div class="field">
+                        <label>GitHub Repository URL</label>
+                        <input type="url" data-field="cta_github_url" required>
+                    </div>
+                    <div class="field">
+                        <label>Canonical URL</label>
+                        <input type="url" data-field="canonical_url">
+                    </div>
+                    <div class="field">
+                        <label>OG Image URL</label>
+                        <input type="url" data-field="og_image">
+                    </div>
+                    <button type="button" class="remove-plugin">Remove Plugin</button>
+                </article>
+            </template>
         </section>
 
         <section>
@@ -391,5 +592,46 @@ function h(string $value): string
             <?php endif; ?>
         </section>
     </main>
+    <script>
+        (function () {
+            const addButton = document.getElementById('add-plugin');
+            const grid = document.getElementById('plugin-grid');
+            const template = document.getElementById('plugin-template');
+            if (!addButton || !grid || !template) {
+                return;
+            }
+
+            let counter = grid.children.length;
+            addButton.addEventListener('click', function () {
+                counter += 1;
+                const fragment = template.content.cloneNode(true);
+                fragment.querySelectorAll('[data-field]').forEach(function (input) {
+                    const field = input.getAttribute('data-field');
+                    const name = `plugins[new-${counter}][${field}]`;
+                    input.setAttribute('name', name);
+                    if (typeof input.value !== 'undefined') {
+                        input.value = '';
+                    }
+                });
+                grid.appendChild(fragment);
+            });
+
+            grid.addEventListener('click', function (event) {
+                const removeButton = event.target.closest('.remove-plugin');
+                if (!removeButton) {
+                    return;
+                }
+                const card = removeButton.closest('.plugin-card');
+                if (!card) {
+                    return;
+                }
+                if (grid.children.length <= 1) {
+                    alert('At least one plugin entry is required.');
+                    return;
+                }
+                card.remove();
+            });
+        })();
+    </script>
 </body>
 </html>
