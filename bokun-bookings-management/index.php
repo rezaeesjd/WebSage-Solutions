@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../lib/settings.php';
 
-$config = get_plugin_page_settings('import-bokun-to-wp-ecommerce-and-custom-fields');
+$config = get_plugin_page_settings('bokun-bookings-management');
 $siteSettings = $config['site'];
 $pluginSettings = $config['plugin'];
 
@@ -12,7 +12,7 @@ function esc(string $value): string
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
 
-$siteTitle       = $pluginSettings['site_title'] ?? 'Import Bokun to WP Ecommerce and Custom Fields | Websage Solutions';
+$siteTitle       = $pluginSettings['site_title'] ?? 'Bokun Bookings Management | Websage Solutions';
 $metaDescription = $pluginSettings['meta_description'] ?? '';
 $heroEyebrow     = $pluginSettings['hero_eyebrow'] ?? '';
 $heroHeading     = $pluginSettings['hero_heading'] ?? '';
@@ -195,21 +195,19 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
             line-height: 1.7;
             padding-left: 20px;
         }
-        .pill-list {
+        .metadata-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
             list-style: none;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
             padding: 0;
             margin: 0;
         }
-        .pill-list li {
-            background: rgba(37, 99, 235, 0.08);
-            color: #1d4ed8;
-            padding: 10px 18px;
-            border-radius: 999px;
-            font-weight: 600;
-            letter-spacing: 0.01em;
+        .metadata-list li {
+            padding: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 18px;
+            background: rgba(37, 99, 235, 0.04);
         }
         .grid {
             display: grid;
@@ -223,19 +221,14 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
             background: #ffffff;
             box-shadow: 0 12px 28px rgba(148,163,184,0.2);
         }
-        .metadata-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 18px;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .metadata-list li {
-            padding: 16px;
-            border: 1px solid rgba(148, 163, 184, 0.3);
-            border-radius: 18px;
-            background: rgba(37, 99, 235, 0.04);
+        pre {
+            background: #0f172a;
+            color: #f8fafc;
+            border-radius: 16px;
+            padding: 24px;
+            overflow-x: auto;
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
         table {
             width: 100%;
@@ -255,7 +248,7 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
                 padding: 28px;
             }
             header {
-                padding: 64px 16px 80px;
+                padding: 72px 16px 80px;
             }
             header h1 {
                 font-size: 2.2rem;
@@ -287,48 +280,68 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
 </header>
 <main>
     <section>
-        <h2>Why Bokun Bookings Management?</h2>
-        <p>Import Bokun to WP Ecommerce and Custom Fields gives tour and activity teams a first-class booking workspace in\
-side WordPress. Fetch reservations via the Bokun API, enrich them with taxonomies and custom fields, and expose shortcodes so\
- staff can trigger imports or review history without touching wp-admin.</p>
+        <h2>Purpose-built Bokun imports for WordPress</h2>
+        <p>Bokun Bookings Management lets tour and activity operators pull reservations from the Bokun API, persist them as the
+            <code>bokun_booking</code> custom post type, and make the data actionable inside WordPress dashboards, Elementor
+            widgets, or custom workflows. Multiple API credentials, ARIA-friendly progress bars, and deeply integrated
+            shortcodes mean staff can fetch bookings without touching wp-admin.</p>
         <ul class="metadata-list">
-            <li><strong>WordPress</strong><br>Version 6.0 or newer</li>
+            <li><strong>WordPress</strong><br>6.0 or newer</li>
             <li><strong>PHP</strong><br>7.4+ with cURL enabled</li>
-            <li><strong>Requires</strong><br>Bokun account with API key + secret</li>
-            <li><strong>Custom Post Type</strong><br><code>bokun_booking</code> with taxonomies</li>
+            <li><strong>API access</strong><br>Bokun account with key &amp; secret</li>
+            <li><strong>Custom post type</strong><br><code>bokun_booking</code> + taxonomies</li>
         </ul>
     </section>
 
     <section>
-        <h2>Feature Highlights</h2>
+        <h2>Repository layout</h2>
+        <p>Everything ships as a standard WordPress plugin that lives under <code>wp-content/plugins/bokun-bookings-management</code>.</p>
+        <pre>
+├── bokun-bookings-management.php
+├── includes/
+│   ├── bokun-bookings-manager.php
+│   ├── bokun_settings.class.php
+│   ├── bokun_shortcode.class.php
+│   ├── bokun_settings.view.php
+│   └── bokun_booking_history.view.php
+├── assets/
+│   ├── css/
+│   ├── js/
+│   └── images/
+└── addons/
+        </pre>
+    </section>
+
+    <section>
+        <h2>Feature highlights</h2>
         <div class="grid">
             <div class="card">
-                <h3>Multiple API Credentials</h3>
-                <p>Store, validate, and remove any number of Bokun API key and secret pairs. Each credential set becomes its own import context, making it easy to process bookings from multiple Bokun environments.</p>
+                <h3>Multiple credentials</h3>
+                <p>Store, validate, and remove any number of Bokun API key/secret pairs. Each set becomes its own import context so you can process bookings from multiple Bokun tenants without editing code.</p>
             </div>
             <div class="card">
-                <h3>Progress-Aware Imports</h3>
-                <p>Secure admin actions paginate through the Booking Search endpoint, saving bookings while reporting completion stats, errors, and queued contexts so teams know exactly where the import stands.</p>
+                <h3>Progress-aware imports</h3>
+                <p>Admin/AJAX actions (such as <code>bokun_bookings_manager_page</code>) paginate through the Booking Search endpoint, write bookings to WordPress, and report progress, queued contexts, and errors back to the UI.</p>
             </div>
             <div class="card">
-                <h3>Dedicated Post Types</h3>
-                <p>Bookings are stored as the <code>bokun_booking</code> post type with Booking Status, Product Tags, and Team Member taxonomies so you can filter data in WP Ecommerce, Elementor, or custom REST endpoints.</p>
+                <h3>First-class post type</h3>
+                <p>Reservations are normalized into the <code>bokun_booking</code> post type with Booking Status, Product Tag, and Team Member taxonomies that power filtered dashboards, Elementor widgets, or REST/GraphQL queries.</p>
             </div>
             <div class="card">
-                <h3>Dashboards &amp; Shortcodes</h3>
-                <p>Drop <code>[bokun_booking_dashboard]</code>, <code>[bokun_booking_history]</code>, or <code>[bokun_fetch_button]</code> onto any page. The plugin can even append the dashboard automatically to a selected page.</p>
+                <h3>Dashboards &amp; shortcodes</h3>
+                <p>Shortcodes like <code>[bokun_booking_dashboard]</code>, <code>[bokun_booking_history]</code>, and <code>[bokun_fetch_button]</code> bring dashboards, DataTables, and fetch buttons to any page—no admin access required.</p>
             </div>
             <div class="card">
-                <h3>Rich Booking History</h3>
-                <p>An accessible DataTable powers booking history views and CSV exports. Column filters, capability checks, and status grouping help admins audit every change.</p>
+                <h3>Rich booking history</h3>
+                <p>The admin history view and history shortcode share a responsive DataTable with filters, CSV export (via DataTables Buttons/JSZip), and capability checks to prevent unauthorized viewing.</p>
             </div>
             <div class="card">
-                <h3>Media Utilities</h3>
-                <p>Trigger background tasks that import gallery images for each Product Tag taxonomy term so your customer-facing UI stays on brand.</p>
+                <h3>Product tag media jobs</h3>
+                <p>Trigger a background importer that pulls gallery images for every Bokun Product Tag and assigns them to WordPress taxonomy terms for polished, on-brand UI.</p>
             </div>
             <div class="card">
-                <h3>Accessible Progress UI</h3>
-                <p>ARIA-enabled progress bars and polite live regions inform staffers about import states whether they use the admin panel or the public fetch button.</p>
+                <h3>Accessible status updates</h3>
+                <p>Both the admin fetch button and the public <code>[bokun_fetch_button]</code> shortcode share ARIA-enabled progress bars and polite live regions so screen-reader users stay informed.</p>
             </div>
         </div>
     </section>
@@ -336,31 +349,30 @@ side WordPress. Fetch reservations via the Bokun API, enrich them with taxonomie
     <section>
         <h2>Installation</h2>
         <ol>
-            <li>Download the plugin ZIP using the button above.</li>
-            <li>Upload or clone the <code>bokun-bookings-management</code> folder to <code>wp-content/plugins/</code>.</li>
-            <li>Ensure the directory name matches the plugin slug so WordPress can read the header in <code>bokun-bookings-management.php</code>.</li>
-            <li>Activate the plugin. On first run it creates the <code>wp_bokun_booking_history</code> table and redirects you to the settings screen.</li>
+            <li>Download the latest release zip via the button above or clone the repository into <code>wp-content/plugins/</code>.</li>
+            <li>Make sure the directory is named <code>bokun-bookings-management</code> so WordPress can detect the plugin header.</li>
+            <li>Activate the plugin. The first activation creates the <code>wp_bokun_booking_history</code> table and redirects to the settings screen.</li>
         </ol>
     </section>
 
     <section>
-        <h2>Configure Credentials &amp; Dashboards</h2>
+        <h2>Configure API credentials &amp; dashboard output</h2>
         <ol>
-            <li>Navigate to <strong>Bokun Bookings Management → Settings</strong>.</li>
-            <li>Add one or more API keys and secrets. Use the “Add another API” control to define multiple contexts.</li>
-            <li>Select the page that should automatically display the booking dashboard or insert the shortcode manually.</li>
-            <li>Use the Fetch Booking panel to test the import pipeline and watch real-time progress output.</li>
-            <li>Run the optional Product Tag image importer when you need taxonomy media synced from Bokun.</li>
+            <li>Visit <strong>Bokun Bookings Management → Settings</strong>.</li>
+            <li>Add one or more API key/secret pairs using the repeatable “Add another API” interface—each set becomes a named context.</li>
+            <li>Select a page that should automatically append the booking dashboard or drop the <code>[bokun_booking_dashboard]</code> shortcode anywhere.</li>
+            <li>Use the Fetch Booking panel to start the importer and watch real-time progress without refreshing.</li>
+            <li>Optional: run the Product Tag image importer to sync taxonomy media from Bokun.</li>
         </ol>
     </section>
 
     <section>
-        <h2>Import Behavior</h2>
+        <h2>Import behavior</h2>
         <ul>
-            <li>Every credential set becomes a sequential import context (API 1, API 2, etc.).</li>
-            <li>The plugin calls <code>/booking.json/booking-search</code> with a default window from yesterday through one month ahead. Filter <code>bokun_booking_items_per_page</code> to change pagination.</li>
-            <li>Bookings are stored as the <code>bokun_booking</code> post type and forced to <code>publish</code> so future-dated reservations show up immediately.</li>
-            <li>Each create/update action is persisted to <code>wp_bokun_booking_history</code> with actor, source, and checked state metadata.</li>
+            <li>Every credential pair is normalized into a numbered import context (API 1, API 2, etc.) that runs sequentially.</li>
+            <li>The plugin calls <code>/booking.json/booking-search</code> with a default date window from yesterday through one month ahead—filter <code>bokun_booking_items_per_page</code> to adjust pagination.</li>
+            <li>Bookings are stored as <code>bokun_booking</code> posts and forced to <code>publish</code> status so future-dated reservations appear immediately.</li>
+            <li>Each create/update action logs to <code>wp_bokun_booking_history</code> with actor, status, and “checked” metadata for auditing.</li>
         </ul>
     </section>
 
@@ -368,68 +380,68 @@ side WordPress. Fetch reservations via the Bokun API, enrich them with taxonomie
         <h2>Shortcodes</h2>
         <table>
             <thead>
-                <tr>
-                    <th>Shortcode</th>
-                    <th>Purpose</th>
-                    <th>Attributes</th>
-                </tr>
+            <tr>
+                <th>Shortcode</th>
+                <th>Purpose</th>
+                <th>Attributes</th>
+            </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td><code>[bokun_fetch_button]</code></td>
-                    <td>Renders a front-end button that triggers the importer plus the shared progress UI.</td>
-                    <td>None.</td>
-                </tr>
-                <tr>
-                    <td><code>[bokun_booking_history]</code></td>
-                    <td>Outputs the booking history DataTable anywhere.</td>
-                    <td><code>limit</code> (default 100), <code>capability</code> (default <code>manage_options</code>), <code>export</code> (CSV filename slug).</td>
-                </tr>
-                <tr>
-                    <td><code>[bokun_booking_dashboard]</code></td>
-                    <td>Displays the dashboard cards, filters, and charts inside your selected page.</td>
-                    <td>None.</td>
-                </tr>
+            <tr>
+                <td><code>[bokun_fetch_button]</code></td>
+                <td>Displays a primary button that triggers the AJAX importer plus the shared progress UI.</td>
+                <td>None.</td>
+            </tr>
+            <tr>
+                <td><code>[bokun_booking_history]</code></td>
+                <td>Outputs the responsive, filterable booking-history DataTable anywhere.</td>
+                <td><code>limit</code> (default 100), <code>capability</code> (default <code>manage_options</code>), <code>export</code> (CSV filename slug).</td>
+            </tr>
+            <tr>
+                <td><code>[bokun_booking_dashboard]</code></td>
+                <td>Renders the dashboard cards, filters, and KPIs for team members and partners.</td>
+                <td>None.</td>
+            </tr>
             </tbody>
         </table>
     </section>
 
     <section>
-        <h2>Admin Booking History</h2>
-        <p>The plugin ships with a Booking History submenu that displays the most recent entries stored in <code>wp_bokun_booking_history</code>. Users can filter by action, status, actor, and source, plus download the visible dataset as CSV through DataTables Buttons and JSZip. The view gracefully handles missing tables (e.g., before activation) and respects capability checks.</p>
+        <h2>Booking history UI</h2>
+        <p>The built-in Booking History submenu and shortcode both query <code>wp_bokun_booking_history</code> and render a responsive DataTable with collapsible filters, column search, CSV export, and capability checks. The view handles missing tables gracefully—for example when the plugin has been uploaded but not activated yet.</p>
     </section>
 
     <section>
-        <h2>Hooks &amp; Filters</h2>
+        <h2>Hooks &amp; filters</h2>
         <ul>
-            <li><code>bokun_booking_items_per_page</code> – Change how many bookings are pulled per API page (default 50).</li>
-            <li><code>bokun_booking_request_timeout</code> – Adjust the cURL timeout (default 300 seconds).</li>
-            <li><code>bokun_booking_history_page_limit</code> – Set how many rows display on the admin booking history page (default 100).</li>
-            <li><code>bokun_txt_domain</code> – Fired after the text domain loads so you can register additional strings.</li>
+            <li><code>bokun_booking_items_per_page</code> – Change how many bookings the importer requests per API page (default 50).</li>
+            <li><code>bokun_booking_request_timeout</code> – Adjust the cURL timeout in seconds (default 300).</li>
+            <li><code>bokun_booking_history_page_limit</code> – Control how many rows the admin history screen displays (default 100).</li>
+            <li><code>bokun_txt_domain</code> – Fires after the text domain loads so you can register additional translations.</li>
         </ul>
     </section>
 
     <section>
-        <h2>Development Workflow</h2>
+        <h2>Development workflow</h2>
         <ol>
-            <li>Install the plugin in a local WordPress environment.</li>
-            <li>Run <code>npm install</code> and <code>npm run dev</code> inside <code>assets/</code> if you extend the JavaScript/CSS helpers (current build is plain CSS/JS).</li>
-            <li>Use <code>wp i18n make-pot</code> to refresh translation files whenever you change user-facing strings.</li>
-            <li>Follow WordPress PHP coding standards and escape all output.</li>
+            <li>Install the plugin in a local WordPress environment for testing.</li>
+            <li>Run <code>npm install</code> and <code>npm run dev</code> inside <code>assets/</code> if you extend the CSS/JS helpers (current build is plain CSS/JS).</li>
+            <li>Use <code>wp i18n make-pot</code> to refresh translation catalogs whenever you edit user-facing strings.</li>
+            <li>Follow WordPress coding standards, escape output, and lint PHP with tools such as <code>wp coding standards</code>.</li>
         </ol>
     </section>
 
     <section>
         <h2>Troubleshooting</h2>
         <ul>
-            <li><strong>Error: No API credentials available</strong> – Ensure at least one credential pair is saved; legacy single-key installs are migrated the next time you view the settings screen.</li>
-            <li><strong>Booking history table missing</strong> – Reactivate the plugin to trigger <code>dbDelta</code> and recreate <code>wp_bokun_booking_history</code>.</li>
-            <li><strong>Imports timing out</strong> – Reduce the booking window or add filters to shrink payloads, and confirm the server can reach <code>api.bokun.io</code>.</li>
+            <li><strong>Error: No API credentials available for this import.</strong> – Save at least one credential pair; legacy single-key installs are migrated the next time you load the settings screen.</li>
+            <li><strong>Booking history table missing.</strong> – Reactivate the plugin to run <code>dbDelta</code> and recreate <code>wp_bokun_booking_history</code>.</li>
+            <li><strong>Imports timing out.</strong> – Narrow the booking window, reduce <code>bokun_booking_items_per_page</code>, and confirm your host allows outbound HTTPS calls to <code>api.bokun.io</code>.</li>
         </ul>
     </section>
 
     <section>
-        <h2>Need Help?</h2>
+        <h2>Need help?</h2>
         <p>Email <a href="mailto:<?= esc($contactEmail) ?>"><?= esc($contactEmail) ?></a> with deployment questions, feature requests, or support needs.</p>
     </section>
 </main>

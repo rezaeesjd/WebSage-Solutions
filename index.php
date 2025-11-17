@@ -55,8 +55,10 @@ $heroBody = $site['hero_body'] ?? '';
             max-width: 960px;
         }
         header {
+            position: relative;
             text-align: center;
             margin-bottom: 32px;
+            padding-top: 56px;
         }
         header h1 {
             font-size: 2.4rem;
@@ -65,6 +67,36 @@ $heroBody = $site['hero_body'] ?? '';
         header p {
             margin: 0;
             color: rgba(248, 250, 252, 0.8);
+        }
+        .lab-logo {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(248, 250, 252, 0.25);
+            color: #f8fafc;
+            backdrop-filter: blur(6px);
+        }
+        .lab-logo-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #38bdf8;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+        }
+        .lab-logo:hover,
+        .lab-logo:focus {
+            color: #fff;
+            border-color: rgba(248, 250, 252, 0.55);
         }
         .eyebrow {
             text-transform: uppercase;
@@ -109,11 +141,25 @@ $heroBody = $site['hero_body'] ?? '';
             width: 18px;
             height: 18px;
         }
+        @media (max-width: 520px) {
+            header {
+                padding-top: 32px;
+            }
+            .lab-logo {
+                position: static;
+                transform: none;
+                margin-bottom: 16px;
+            }
+        }
     </style>
 </head>
 <body>
     <main>
         <header>
+            <a class="lab-logo" href="/" aria-label="Websage Solutions Lab homepage">
+                <span class="lab-logo-dot" aria-hidden="true"></span>
+                Websage Solutions Lab
+            </a>
             <?php if ($heroEyebrow): ?><div class="eyebrow"><?= esc($heroEyebrow) ?></div><?php endif; ?>
             <h1><?= esc($heroHeading) ?></h1>
             <p><?= esc($heroBody) ?></p>

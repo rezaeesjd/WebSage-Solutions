@@ -63,6 +63,7 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
             background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
         }
         header {
+            position: relative;
             background: radial-gradient(circle at top left, rgba(37,99,235,0.14), transparent 55%), #0f172a;
             color: #f8fafc;
             text-align: center;
@@ -85,6 +86,40 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
             font-size: 0.78rem;
             margin-bottom: 18px;
             color: rgba(248, 250, 252, 0.75);
+        }
+        .lab-logo {
+            position: absolute;
+            top: 32px;
+            left: 32px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(248, 250, 252, 0.25);
+            color: #f8fafc;
+            backdrop-filter: blur(8px);
+        }
+        .lab-logo span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .lab-logo-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #38bdf8;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+        }
+        .lab-logo:hover,
+        .lab-logo:focus {
+            color: #fff;
+            border-color: rgba(248, 250, 252, 0.55);
         }
         .cta-row {
             display: flex;
@@ -217,6 +252,11 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
         @media (max-width: 640px) {
             header h1 { font-size: 2.2rem; }
             section { padding: 32px; }
+            .lab-logo {
+                position: static;
+                margin-bottom: 18px;
+                justify-content: center;
+            }
         }
     </style>
     <script type="application/ld+json">
@@ -265,6 +305,9 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
 </head>
 <body>
     <header>
+        <a class="lab-logo" href="/" aria-label="Back to the Websage Solutions homepage">
+            <span><span class="lab-logo-dot" aria-hidden="true"></span>Websage Solutions Lab</span>
+        </a>
         <?php if ($heroEyebrow): ?>
             <p class="eyebrow"><?= esc($heroEyebrow) ?></p>
         <?php endif; ?>

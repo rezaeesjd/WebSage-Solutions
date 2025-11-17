@@ -74,6 +74,20 @@ function site_settings_defaults(): array
                 'canonical_url'     => 'https://websage.solutions/import-bokun-to-wp-ecommerce-and-custom-fields/',
                 'og_image'          => 'https://websage.solutions/assets/bokun-bookings-management-og.png',
             ]),
+            'bokun-bookings-management' => array_merge(base_plugin_defaults(), [
+                'slug'              => 'bokun-bookings-management',
+                'card_title'        => 'Bokun Bookings Management',
+                'card_excerpt'      => 'Import Bokun reservations via API, store them as bokun_booking posts, and expose dashboards, booking history tables, and public fetch buttons.',
+                'site_title'        => 'Bokun Bookings Management | Websage Solutions',
+                'meta_description'  => 'Bokun Bookings Management pulls reservations from the Bokun API, stores them as bokun_booking posts, and exposes dashboards, booking history tables, and importer shortcodes inside WordPress.',
+                'hero_eyebrow'      => 'WordPress Plugin • Built by Websage Solutions Lab',
+                'hero_heading'      => 'Bokun Bookings Management for WordPress',
+                'hero_body'         => 'Pull Bokun reservations straight into WordPress, power dashboards and booking history tables, and give staff a front-end fetch button backed by the Bokun API.',
+                'cta_download_url'  => 'https://github.com/rezaeesjd/bokun-bookings-management/archive/refs/heads/main.zip',
+                'cta_github_url'    => 'https://github.com/rezaeesjd/bokun-bookings-management',
+                'canonical_url'     => 'https://websage.solutions/bokun-bookings-management/',
+                'og_image'          => 'https://websage.solutions/assets/bokun-bookings-management-og.png',
+            ]),
         ],
     ];
 }
