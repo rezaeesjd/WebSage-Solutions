@@ -83,6 +83,8 @@ let selectedSide = 'buy';
 let trendChart;
 let marketCompareChart;
 
+const currencySymbols = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
+
 const currencySelect = document.getElementById('currency');
 const marketGridEl = document.getElementById('market-grid');
 const marketTagsEl = document.getElementById('market-tags');
@@ -97,6 +99,10 @@ const compareLegend = document.getElementById('compare-legend');
 const compareChartLabel = document.getElementById('compare-chart-label');
 const pinnedNote = document.getElementById('pinned-note');
 const heroMarketList = document.getElementById('hero-market-list');
+const currencyTokens = {
+  gold: document.getElementById('gold-currency-token'),
+  silver: document.getElementById('silver-currency-token')
+};
 
 const goldCard = {
   price: document.getElementById('gold-price'),
@@ -129,9 +135,22 @@ function formatPrice(value) {
   return formatCurrencyValue(value * rate);
 }
 
+function currencyLabel(code) {
+  const symbol = currencySymbols[code] || '';
+  return symbol ? `${code} (${symbol})` : code;
+}
+
 function formatDelta(value) {
   const sign = value > 0 ? '+' : '';
   return `${sign}${value.toFixed(2)}%`;
+}
+
+function formatStatus(status) {
+  const normalized = status?.toLowerCase() === 'open' ? 'open' : 'pre';
+  return {
+    text: normalized === 'open' ? 'Live' : 'Pre-open',
+    className: normalized
+  };
 }
 
 function averageMetal(metal) {
@@ -248,9 +267,12 @@ function renderMarketRibbon() {
 
 function updatePinnedSummary() {
   if (!pinnedNote) return;
-  pinnedNote.textContent = `Gold (XAU) and Silver (XAG) pinned from search · ${markets.length} markets · Prices in ${selectedCurrency}.`;
+  pinnedNote.textContent = `Gold (XAU) and Silver (XAG) pinned from search · ${markets.length} markets · Prices in ${currencyLabel(selectedCurrency)}.`;
+  const label = currencyLabel(selectedCurrency);
+  if (currencyTokens.gold) currencyTokens.gold.textContent = `Gold tracked in ${label}`;
+  if (currencyTokens.silver) currencyTokens.silver.textContent = `Silver tracked in ${label}`;
   if (compareChartLabel) {
-    compareChartLabel.textContent = `Prices shown per venue in ${selectedCurrency}`;
+    compareChartLabel.textContent = `Prices shown per venue in ${label}`;
   }
 }
 
@@ -272,6 +294,7 @@ function renderMarkets() {
     const metalData = m.metals[selectedMetal];
     const altMetal = selectedMetal === 'gold' ? 'silver' : 'gold';
     const altData = m.metals[altMetal];
+    const statusMeta = formatStatus(m.status);
 
     card.innerHTML = `
       <header>
@@ -279,7 +302,7 @@ function renderMarkets() {
           <div class="market-name">${m.name}</div>
           <div class="status">${m.region} · ${m.timezone}</div>
         </div>
-        <div class="chip">${m.status === 'Open' ? 'Live' : 'Pre-open'}</div>
+        <div class="status-pill ${statusMeta.className}">${statusMeta.text}</div>
       </header>
       <div class="metric-row">
         <div>
@@ -488,6 +511,14 @@ function simulateQuote() {
   const size = Number(document.getElementById('size').value || 0);
   const venueId = document.getElementById('venue').value;
   const venue = markets.find(m => m.id === venueId) || markets[0];
+  if (!size || size < 1) {
+    orderFeedbackEl.textContent = 'Enter a valid size before simulating a quote.';
+    return;
+  }
+  if (!venue) {
+    orderFeedbackEl.textContent = 'Select a venue to simulate pricing.';
+    return;
+  }
   const data = venue.metals[metal];
   const price = selectedSide === 'buy' ? data.ask : data.bid;
   const formattedPrice = formatPrice(price);
@@ -499,7 +530,8 @@ function submitOrder() {
   const venueId = document.getElementById('venue').value;
   const venue = markets.find(m => m.id === venueId);
   const limit = document.getElementById('limit').value;
-  orderFeedbackEl.textContent = `Preview sent for ${metal.toUpperCase()} ${selectedSide.toUpperCase()} | Venue: ${venue?.name || 'Any'} | Limit: ${limit || 'auto-best'}.`;
+  const limitMsg = limit ? `${limit} (${currencyLabel(selectedCurrency)})` : 'auto-best';
+  orderFeedbackEl.textContent = `Preview sent for ${metal.toUpperCase()} ${selectedSide.toUpperCase()} | Venue: ${venue?.name || 'Any'} | Limit: ${limitMsg}.`;
 }
 
 function editMarkets() {
@@ -509,7 +541,15 @@ function editMarkets() {
 
 function refreshWatch() {
   watchlist.forEach(item => {
-    item.trend = +(item.trend + (Math.random() * 0.2 - 0.1)).toFixed(2);
+    const drift = +(Math.random() * 0.2 - 0.1).toFixed(2);
+    item.trend = +(item.trend + drift).toFixed(2);
+
+    const mid = (item.bid + item.ask) / 2;
+    const move = mid * (drift / 100);
+    const precision = item.metal === 'Gold' ? 2 : 3;
+
+    item.bid = +(item.bid + move).toFixed(precision);
+    item.ask = +(Math.max(item.bid + (item.metal === 'Gold' ? 0.3 : 0.02), item.ask + move)).toFixed(precision);
   });
   renderWatchlist();
 }

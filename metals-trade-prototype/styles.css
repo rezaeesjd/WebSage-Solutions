@@ -253,6 +253,29 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 }
 .badge-soft { color: var(--accent-2); }
 
+.status-pill {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.status-pill.open {
+  color: #70f5c1;
+  border-color: rgba(112,245,193,0.4);
+  box-shadow: 0 0 0 1px rgba(112,245,193,0.08);
+}
+
+.status-pill.pre {
+  color: var(--amber);
+  border-color: rgba(255,209,102,0.4);
+  box-shadow: 0 0 0 1px rgba(255,209,102,0.08);
+}
+
 .spread .tag-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .tag { padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); font-size: 13px; }
 
