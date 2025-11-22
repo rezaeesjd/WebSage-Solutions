@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metals Desk | Gold & Silver Trading</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="top-bar">
+      <div class="brand">
+        <div class="logo">M</div>
+        <div>
+          <p class="eyebrow">Metals Desk</p>
+          <h1>Gold &amp; Silver Tradeboard</h1>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="select-group">
+          <label for="currency">Currency</label>
+          <select id="currency">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="JPY">JPY</option>
+          </select>
+        </div>
+        <button class="ghost" id="edit-markets">Edit Markets</button>
+        <button class="primary">Book Demo Trade</button>
+      </div>
+    </header>
+
+    <section class="intro">
+      <div>
+        <p class="eyebrow">Live board &bull; Prototype</p>
+        <h2>Institutional-grade visuals for gold and silver, treated as distinct books.</h2>
+        <p class="muted">Designed for multi-market teams comparing venue-by-venue pricing. Interaction is mocked but layouts are production-ready with USD as the default trading currency.</p>
+      </div>
+      <div class="signal">
+        <p>Session</p>
+        <div class="pill pill-green">Americas Live</div>
+        <div class="pill pill-amber">Asia Pre-open</div>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat-card" id="gold-card">
+        <div class="stat-head">
+          <p class="eyebrow">Composite Gold</p>
+          <span class="badge badge-soft">XAU</span>
+        </div>
+        <div class="stat-body">
+          <h3 class="price" id="gold-price">$0.00</h3>
+          <p class="delta" id="gold-delta">&mdash;</p>
+        </div>
+        <footer>
+          <p id="gold-range">Range</p>
+          <p class="muted" id="gold-depth">Depth</p>
+        </footer>
+      </article>
+
+      <article class="stat-card" id="silver-card">
+        <div class="stat-head">
+          <p class="eyebrow">Composite Silver</p>
+          <span class="badge badge-soft">XAG</span>
+        </div>
+        <div class="stat-body">
+          <h3 class="price" id="silver-price">$0.00</h3>
+          <p class="delta" id="silver-delta">&mdash;</p>
+        </div>
+        <footer>
+          <p id="silver-range">Range</p>
+          <p class="muted" id="silver-depth">Depth</p>
+        </footer>
+      </article>
+
+      <article class="stat-card spread">
+        <div class="stat-head">
+          <p class="eyebrow">Market Selector</p>
+          <span class="badge">4 venues</span>
+        </div>
+        <div class="tag-grid" id="market-tags"></div>
+        <footer>
+          <p class="muted">Tap "Edit Markets" to reorder or simulate new venues.</p>
+        </footer>
+      </article>
+    </section>
+
+    <section class="action-grid">
+      <article class="action-card" id="best-gold">
+        <header>
+          <p class="eyebrow">Buy Gold</p>
+          <h3>Find best venue</h3>
+        </header>
+        <p class="muted">Pick the cheapest ask across venues, keep the ticket in USD, and route instantly.</p>
+        <div class="action-price" id="best-gold-price">$0.00</div>
+        <p class="muted" id="best-gold-venue">Venue updates with market data.</p>
+        <button class="primary ghosted" data-best="gold">Route to venue</button>
+      </article>
+      <article class="action-card" id="best-silver">
+        <header>
+          <p class="eyebrow">Buy Silver</p>
+          <h3>Find best venue</h3>
+        </header>
+        <p class="muted">Track silver independently and capture the lowest ask before spreads move.</p>
+        <div class="action-price" id="best-silver-price">$0.00</div>
+        <p class="muted" id="best-silver-venue">Venue updates with market data.</p>
+        <button class="primary ghosted" data-best="silver">Route to venue</button>
+      </article>
+    </section>
+
+    <section class="layout-grid">
+      <article class="panel wide">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Market Overview</p>
+            <h3>Live Metals Board</h3>
+          </div>
+          <div class="segmented" role="group" aria-label="Metal selector">
+            <button class="seg active" data-metal="gold">Gold</button>
+            <button class="seg" data-metal="silver">Silver</button>
+          </div>
+        </header>
+        <div class="market-grid" id="market-grid"></div>
+      </article>
+
+      <article class="panel">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Order Stencil</p>
+            <h3>Structured RFQ</h3>
+          </div>
+          <div class="pill pill-soft">Prototype only</div>
+        </header>
+        <form class="order-form">
+          <div class="form-row">
+            <label>Side</label>
+            <div class="segmented full" role="group">
+              <button class="seg active" data-side="buy">Buy</button>
+              <button class="seg" data-side="sell">Sell</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <label for="metal">Metal</label>
+            <select id="metal">
+              <option value="gold">Gold (XAU)</option>
+              <option value="silver">Silver (XAG)</option>
+            </select>
+          </div>
+          <div class="form-row two-col">
+            <div>
+              <label for="size">Size</label>
+              <input id="size" type="number" min="10" step="10" value="250" />
+              <p class="help">t oz for gold, k oz for silver.</p>
+            </div>
+            <div>
+              <label for="venue">Venue</label>
+              <select id="venue"></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label for="limit">Limit</label>
+            <input id="limit" type="text" placeholder="Auto-priced at best bid/offer" />
+          </div>
+          <div class="cta-row">
+            <button type="button" class="ghost" id="simulate-quote">Simulate Quote</button>
+            <button type="button" class="primary" id="submit-order">Send Preview</button>
+          </div>
+          <p class="muted" id="order-feedback">Waiting for input&hellip;</p>
+        </form>
+      </article>
+
+      <article class="panel">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Performance</p>
+            <h3>Composite Curve</h3>
+          </div>
+          <div class="pill pill-soft" id="chart-label">Gold | USD</div>
+        </header>
+        <canvas id="trendChart" height="210"></canvas>
+        <div class="chart-legend" id="chart-legend"></div>
+      </article>
+
+      <article class="panel">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Watchlist</p>
+            <h3>Quick Metals</h3>
+          </div>
+          <button class="ghost" id="refresh-watch">Refresh</button>
+        </header>
+        <div class="table" id="watch-table"></div>
+      </article>
+    </section>
+  </div>
+</body>
+</html>
