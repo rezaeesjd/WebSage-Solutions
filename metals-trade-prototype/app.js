@@ -92,6 +92,7 @@ const watchTableEl = document.getElementById('watch-table');
 const marketRibbonEl = document.getElementById('market-ribbon');
 const orderFeedbackEl = document.getElementById('order-feedback');
 const venueSelect = document.getElementById('venue');
+const compareResultsEl = document.getElementById('compare-results');
 
 const chartLabel = document.getElementById('chart-label');
 const chartLegend = document.getElementById('chart-legend');
@@ -262,6 +263,62 @@ function renderMarketRibbon() {
       <p class="muted">Depth ${m.depth.gold.toFixed(1)}m / ${m.depth.silver.toFixed(1)}m · ${m.timezone}</p>
     `;
     marketRibbonEl.appendChild(card);
+  });
+}
+
+function rankMarkets(metal) {
+  const sorted = [...markets].sort((a, b) => a.metals[metal].ask - b.metals[metal].ask);
+  const [first, second] = sorted;
+
+  const diff = second.metals[metal].ask - first.metals[metal].ask;
+  const spreadNote = `${first.spread[metal].toFixed(2)} vs ${second.spread[metal].toFixed(2)} spread`;
+  const reason = `Lowest ask, ${formatPrice(diff)} inside ${second.name} and tighter depth (${spreadNote}).`;
+
+  return {
+    first: {
+      name: first.name,
+      region: first.region,
+      ask: formatPrice(first.metals[metal].ask)
+    },
+    second: {
+      name: second.name,
+      region: second.region,
+      ask: formatPrice(second.metals[metal].ask)
+    },
+    reason
+  };
+}
+
+function renderComparisonResults() {
+  if (!compareResultsEl) return;
+  compareResultsEl.innerHTML = '';
+
+  ['gold', 'silver'].forEach(metal => {
+    const rank = rankMarkets(metal);
+    const card = document.createElement('div');
+    card.className = 'compare-card';
+    card.innerHTML = `
+      <header>
+        <span>${metal === 'gold' ? 'Gold' : 'Silver'} leaders</span>
+        <span class="badge">Best cross-market</span>
+      </header>
+      <div class="positions">
+        <div>
+          <span class="label">First</span>
+          <strong>${rank.first.name}</strong>
+          <span class="muted">${rank.first.region}</span>
+          <span>${rank.first.ask}</span>
+        </div>
+        <div>
+          <span class="label">Second</span>
+          <strong>${rank.second.name}</strong>
+          <span class="muted">${rank.second.region}</span>
+          <span>${rank.second.ask}</span>
+        </div>
+      </div>
+      <p class="reason">${rank.reason}</p>
+    `;
+    compareResultsEl.appendChild(card);
   });
 }
 
@@ -467,6 +524,7 @@ function handleCurrencyChange(e) {
   renderMarketRibbon();
   renderMarketComparisonChart();
   renderHeroMarketSummary();
+  renderComparisonResults();
   updatePinnedSummary();
 }
 
@@ -565,6 +623,7 @@ function init() {
   renderMarketRibbon();
   renderMarketComparisonChart();
   renderHeroMarketSummary();
+  renderComparisonResults();
   updatePinnedSummary();
 
   currencySelect.addEventListener('change', handleCurrencyChange);
