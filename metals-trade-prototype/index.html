@@ -77,17 +77,18 @@
             <div class="hero-market-list" id="hero-market-list"></div>
           </div>
         </div>
+        <div class="compare-results" id="compare-results"></div>
       </div>
       <article class="panel chart-panel wide hero-chart">
         <header class="panel-head">
           <div>
-            <p class="eyebrow">Cross-market decisioning</p>
-            <h3>Gold &amp; Silver asks by market</h3>
+            <p class="eyebrow">Performance</p>
+            <h3>Composite Curve &amp; Venue Overlays</h3>
           </div>
-          <div class="pill pill-soft" id="compare-chart-label">Prices shown per venue in USD</div>
+          <div class="pill pill-soft" id="chart-label">Gold | USD</div>
         </header>
-        <canvas id="marketCompareChart" height="320"></canvas>
-        <div class="chart-legend" id="compare-legend"></div>
+        <canvas id="trendChart" height="320"></canvas>
+        <div class="chart-legend" id="chart-legend"></div>
       </article>
     </section>
 
@@ -240,18 +241,6 @@
           </div>
           <p class="muted" id="order-feedback">Waiting for input&hellip;</p>
         </form>
-      </article>
-
-      <article class="panel chart-panel wide">
-        <header class="panel-head">
-          <div>
-            <p class="eyebrow">Performance</p>
-            <h3>Composite Curve &amp; Venue Overlays</h3>
-          </div>
-          <div class="pill pill-soft" id="chart-label">Gold | USD</div>
-        </header>
-        <canvas id="trendChart" height="320"></canvas>
-        <div class="chart-legend" id="chart-legend"></div>
       </article>
 
       <article class="panel">
