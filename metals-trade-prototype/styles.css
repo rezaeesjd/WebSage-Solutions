@@ -155,6 +155,63 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 
 .token.active { border-color: rgba(124,240,197,0.5); color: #e8edf7; }
 .token.ghost { color: var(--muted); font-weight: 500; }
+.token-stack.dense { justify-content: flex-start; }
+
+.hero-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.pin-list { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.pin-list li { display: flex; align-items: center; gap: 6px; color: #e8edf7; font-weight: 600; }
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.05);
+}
+.dot.gold { background: #7cf0c5; }
+.dot.silver { background: #6ea8ff; }
+
+.hero-market-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.hero-chip {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  box-shadow: var(--shadow);
+}
+
+.hero-chip .label { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: #e8edf7; }
+.hero-chip .label .badge { background: none; border: none; padding: 0; color: var(--muted); font-size: 12px; }
+.hero-chip .prices { margin-top: 6px; display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+
+.compare-hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.query-meta {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  background: linear-gradient(145deg, rgba(124,240,197,0.06), rgba(110,168,255,0.04));
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
 .signal { display: flex; gap: 8px; align-items: center; }
 .pill {
@@ -325,6 +382,8 @@ input, select {
 .chart-panel .chart-legend { justify-content: flex-start; }
 .legend-item { display: flex; align-items: center; gap: 6px; }
 .legend-swatch { width: 12px; height: 12px; border-radius: 4px; }
+.hero-chart canvas { min-height: 360px; }
+.hero-chart { background: linear-gradient(145deg, rgba(124,240,197,0.08), rgba(110,168,255,0.05)); }
 
 @media (max-width: 900px) {
   body { padding: 16px; }
@@ -332,4 +391,5 @@ input, select {
   .intro { flex-direction: column; }
   .toolbar { flex-wrap: wrap; justify-content: flex-end; }
   .form-row.two-col { flex-direction: column; }
+  .compare-hero { grid-template-columns: 1fr; }
 }

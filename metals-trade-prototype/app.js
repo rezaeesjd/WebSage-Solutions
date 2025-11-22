@@ -81,6 +81,7 @@ let selectedCurrency = 'USD';
 let selectedMetal = 'gold';
 let selectedSide = 'buy';
 let trendChart;
+let marketCompareChart;
 
 const currencySelect = document.getElementById('currency');
 const marketGridEl = document.getElementById('market-grid');
@@ -92,6 +93,10 @@ const venueSelect = document.getElementById('venue');
 
 const chartLabel = document.getElementById('chart-label');
 const chartLegend = document.getElementById('chart-legend');
+const compareLegend = document.getElementById('compare-legend');
+const compareChartLabel = document.getElementById('compare-chart-label');
+const pinnedNote = document.getElementById('pinned-note');
+const heroMarketList = document.getElementById('hero-market-list');
 
 const goldCard = {
   price: document.getElementById('gold-price'),
@@ -115,9 +120,13 @@ const bestSilver = {
   venue: document.getElementById('best-silver-venue')
 };
 
+function formatCurrencyValue(value) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: selectedCurrency }).format(value);
+}
+
 function formatPrice(value) {
   const rate = currencyRates[selectedCurrency] || 1;
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: selectedCurrency }).format(value * rate);
+  return formatCurrencyValue(value * rate);
 }
 
 function formatDelta(value) {
@@ -192,6 +201,24 @@ function renderMarketTags() {
   });
 }
 
+function renderHeroMarketSummary() {
+  if (!heroMarketList) return;
+  heroMarketList.innerHTML = '';
+
+  markets.forEach(m => {
+    const chip = document.createElement('div');
+    chip.className = 'hero-chip';
+    chip.innerHTML = `
+      <div class="label">${m.name}<span class="badge">${m.region}</span></div>
+      <div class="prices">
+        <span>Gold ${formatPrice(m.metals.gold.ask)}</span>
+        <span>Silver ${formatPrice(m.metals.silver.ask)}</span>
+      </div>
+    `;
+    heroMarketList.appendChild(chip);
+  });
+}
+
 function renderMarketRibbon() {
   if (!marketRibbonEl) return;
   marketRibbonEl.innerHTML = '';
@@ -217,6 +244,14 @@ function renderMarketRibbon() {
     `;
     marketRibbonEl.appendChild(card);
   });
+}
+
+function updatePinnedSummary() {
+  if (!pinnedNote) return;
+  pinnedNote.textContent = `Gold (XAU) and Silver (XAG) pinned from search · ${markets.length} markets · Prices in ${selectedCurrency}.`;
+  if (compareChartLabel) {
+    compareChartLabel.textContent = `Prices shown per venue in ${selectedCurrency}`;
+  }
 }
 
 function renderVenueOptions() {
@@ -339,6 +374,66 @@ function renderChart() {
   });
 }
 
+function renderMarketComparisonChart() {
+  const ctx = document.getElementById('marketCompareChart');
+  if (!ctx) return;
+
+  const rate = currencyRates[selectedCurrency] || 1;
+  const labels = markets.map(m => `${m.name} (${m.region})`);
+  const goldAsks = markets.map(m => +(m.metals.gold.ask * rate).toFixed(2));
+  const silverAsks = markets.map(m => +(m.metals.silver.ask * rate).toFixed(2));
+
+  const datasets = [
+    {
+      label: 'Gold ask',
+      data: goldAsks,
+      backgroundColor: 'rgba(124,240,197,0.55)',
+      borderColor: '#7cf0c5',
+      borderWidth: 2,
+      borderRadius: 8
+    },
+    {
+      label: 'Silver ask',
+      data: silverAsks,
+      backgroundColor: 'rgba(110,168,255,0.5)',
+      borderColor: '#6ea8ff',
+      borderWidth: 2,
+      borderRadius: 8
+    }
+  ];
+
+  if (marketCompareChart) marketCompareChart.destroy();
+
+  marketCompareChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      plugins: { legend: { display: false } },
+      responsive: true,
+      scales: {
+        x: { ticks: { color: '#93a0b5' }, grid: { display: false } },
+        y: {
+          ticks: {
+            color: '#93a0b5',
+            callback: (value) => formatCurrencyValue(value)
+          },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        }
+      }
+    }
+  });
+
+  if (compareLegend) {
+    compareLegend.innerHTML = '';
+    datasets.forEach(ds => {
+      const legendItem = document.createElement('div');
+      legendItem.className = 'legend-item';
+      legendItem.innerHTML = `<span class="legend-swatch" style="background:${ds.borderColor}"></span>${ds.label}`;
+      compareLegend.appendChild(legendItem);
+    });
+  }
+}
+
 function handleCurrencyChange(e) {
   selectedCurrency = e.target.value;
   renderSummary();
@@ -347,6 +442,9 @@ function handleCurrencyChange(e) {
   renderChart();
   renderBestVenues();
   renderMarketRibbon();
+  renderMarketComparisonChart();
+  renderHeroMarketSummary();
+  updatePinnedSummary();
 }
 
 function handleMetalSwitch(e) {
@@ -425,6 +523,9 @@ function init() {
   renderChart();
   renderBestVenues();
   renderMarketRibbon();
+  renderMarketComparisonChart();
+  renderHeroMarketSummary();
+  updatePinnedSummary();
 
   currencySelect.addEventListener('change', handleCurrencyChange);
   document.querySelector('[aria-label="Metal selector"]').addEventListener('click', handleMetalSwitch);
