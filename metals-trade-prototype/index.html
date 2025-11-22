@@ -52,6 +52,30 @@
       </div>
     </section>
 
+    <section class="compare-hero">
+      <div class="query-meta">
+        <p class="eyebrow">Pinned search</p>
+        <h2>Gold (XAU) + Silver (XAG)</h2>
+        <p class="muted" id="pinned-note">USD default pricing across 4 markets, ready to compare venues side-by-side.</p>
+        <div class="token-stack dense">
+          <div class="token active">Gold tracked in USD</div>
+          <div class="token active">Silver tracked in USD</div>
+          <div class="token ghost">Change currency to view conversions</div>
+        </div>
+      </div>
+      <article class="panel chart-panel wide hero-chart">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Cross-market decisioning</p>
+            <h3>Gold &amp; Silver asks by market</h3>
+          </div>
+          <div class="pill pill-soft" id="compare-chart-label">Prices shown per venue in USD</div>
+        </header>
+        <canvas id="marketCompareChart" height="320"></canvas>
+        <div class="chart-legend" id="compare-legend"></div>
+      </article>
+    </section>
+
     <section class="intro">
       <div>
         <p class="eyebrow">Live board &bull; Prototype</p>

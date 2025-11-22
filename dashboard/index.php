@@ -375,6 +375,36 @@ function h(string $value): string
             background: rgba(248,113,113,0.2);
             color: #b91c1c;
         }
+        .links {
+            padding: 0 24px 8px;
+        }
+        .links-head h2 {
+            margin: 6px 0;
+            font-size: 1.4rem;
+        }
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+        .link-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+        }
+        .link-card span {
+            font-size: 1.4rem;
+            color: var(--accent);
+        }
         pre {
             background: #0f172a;
             color: #e2e8f0;
@@ -395,6 +425,48 @@ function h(string $value): string
         <h1>Site Dashboard</h1>
         <p>Adjust marketing copy, download/GitHub URLs, and trigger deployments without touching code.</p>
     </header>
+
+    <?php
+        $siteLinks = [];
+        foreach ($pluginSettings as $plugin) {
+            if (empty($plugin['slug'])) {
+                continue;
+            }
+            $siteLinks[] = [
+                'title' => $plugin['card_title'] ?? $plugin['slug'],
+                'summary' => $plugin['card_excerpt'] ?? 'Plugin landing page',
+                'url' => '/' . $plugin['slug'] . '/',
+            ];
+        }
+
+        $siteLinks[] = [
+            'title' => 'Metals Desk Prototype',
+            'summary' => 'Front-end prototype comparing gold and silver across venues.',
+            'url' => '/metals-trade-prototype/',
+        ];
+    ?>
+
+    <section class="links">
+        <div class="links-head">
+            <div>
+                <p class="eyebrow">Site Links</p>
+                <h2>Direct access to live pages</h2>
+                <p class="muted">Use these shortcuts to quickly open each plugin page plus the metals trading prototype.</p>
+            </div>
+        </div>
+        <div class="links-grid">
+            <?php foreach ($siteLinks as $link): ?>
+                <a class="link-card" href="<?= h($link['url']) ?>">
+                    <div>
+                        <p class="eyebrow">Live URL</p>
+                        <h3><?= h($link['title']) ?></h3>
+                        <p class="muted"><?= h($link['summary']) ?></p>
+                    </div>
+                    <span aria-hidden="true">↗</span>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
 
     <?php foreach ($flash['success'] as $message): ?>
         <div class="flash flash-success"><?= h($message) ?></div>
