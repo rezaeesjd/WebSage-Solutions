@@ -96,6 +96,7 @@ const chartLegend = document.getElementById('chart-legend');
 const compareLegend = document.getElementById('compare-legend');
 const compareChartLabel = document.getElementById('compare-chart-label');
 const pinnedNote = document.getElementById('pinned-note');
+const heroMarketList = document.getElementById('hero-market-list');
 
 const goldCard = {
   price: document.getElementById('gold-price'),
@@ -197,6 +198,24 @@ function renderMarketTags() {
     tag.className = 'tag';
     tag.textContent = `${m.name} · ${m.region}`;
     marketTagsEl.appendChild(tag);
+  });
+}
+
+function renderHeroMarketSummary() {
+  if (!heroMarketList) return;
+  heroMarketList.innerHTML = '';
+
+  markets.forEach(m => {
+    const chip = document.createElement('div');
+    chip.className = 'hero-chip';
+    chip.innerHTML = `
+      <div class="label">${m.name}<span class="badge">${m.region}</span></div>
+      <div class="prices">
+        <span>Gold ${formatPrice(m.metals.gold.ask)}</span>
+        <span>Silver ${formatPrice(m.metals.silver.ask)}</span>
+      </div>
+    `;
+    heroMarketList.appendChild(chip);
   });
 }
 
@@ -424,6 +443,7 @@ function handleCurrencyChange(e) {
   renderBestVenues();
   renderMarketRibbon();
   renderMarketComparisonChart();
+  renderHeroMarketSummary();
   updatePinnedSummary();
 }
 
@@ -504,6 +524,7 @@ function init() {
   renderBestVenues();
   renderMarketRibbon();
   renderMarketComparisonChart();
+  renderHeroMarketSummary();
   updatePinnedSummary();
 
   currencySelect.addEventListener('change', handleCurrencyChange);
