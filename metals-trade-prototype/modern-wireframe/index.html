@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metals Trade Studio | Gold & Silver</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="nav">
+      <div class="brand">
+        <div class="badge">MT</div>
+        <div>
+          <p class="eyebrow">Metals Trade Studio</p>
+          <h1>Gold &amp; Silver Control Room</h1>
+        </div>
+      </div>
+      <div class="actions">
+        <div class="inline-field">
+          <label for="currency">Currency</label>
+          <select id="currency" aria-label="Currency selector">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="JPY">JPY</option>
+          </select>
+        </div>
+        <button class="ghost" id="refresh">Refresh tape</button>
+        <button class="primary">Book demo</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Dual-metal prototype</p>
+        <h2>Institutional visuals for gold and silver with USD-first logic.</h2>
+        <p class="muted">Four markets, fully front-end, wired for quick venue comparison, currency conversion, and prototype RFQ routing.</p>
+        <div class="chip-row" id="market-chip-row"></div>
+      </div>
+      <div class="hero-metrics">
+        <div class="metric" id="gold-summary">
+          <header>
+            <p class="eyebrow">Composite Gold</p>
+            <span class="tag">XAU</span>
+          </header>
+          <h3 class="price" data-target="gold-price">$0.00</h3>
+          <p class="delta" data-target="gold-delta">&mdash;</p>
+          <p class="muted" data-target="gold-range">Range</p>
+        </div>
+        <div class="metric" id="silver-summary">
+          <header>
+            <p class="eyebrow">Composite Silver</p>
+            <span class="tag">XAG</span>
+          </header>
+          <h3 class="price" data-target="silver-price">$0.00</h3>
+          <p class="delta" data-target="silver-delta">&mdash;</p>
+          <p class="muted" data-target="silver-range">Range</p>
+        </div>
+        <div class="metric alt">
+          <header>
+            <p class="eyebrow">Routing</p>
+            <span class="tag soft">Best venues</span>
+          </header>
+          <div class="routing" id="best-routing"></div>
+          <p class="muted">Auto-selects cheapest ask per metal in the chosen currency.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid two">
+      <article class="panel">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Board</p>
+            <h3>Market depth &amp; spreads</h3>
+          </div>
+          <div class="segmented" role="group" aria-label="Metal focus">
+            <button class="seg active" data-metal="gold">Gold</button>
+            <button class="seg" data-metal="silver">Silver</button>
+          </div>
+        </header>
+        <div class="market-grid" id="market-grid"></div>
+      </article>
+
+      <article class="panel">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Performance</p>
+            <h3>Cross-market overlays</h3>
+          </div>
+          <div class="pill" id="chart-label">Prices in USD baseline</div>
+        </header>
+        <canvas id="priceChart" height="280"></canvas>
+        <div class="legend" id="chart-legend"></div>
+      </article>
+    </section>
+
+    <section class="grid three">
+      <article class="panel">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Order stencil</p>
+            <h3>Prototype RFQ</h3>
+          </div>
+          <div class="pill soft" id="order-best"></div>
+        </header>
+        <form class="form" id="order-form">
+          <div class="field">
+            <label for="side">Side</label>
+            <select id="side">
+              <option value="buy">Buy</option>
+              <option value="sell">Sell</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="metal">Metal</label>
+            <select id="metal">
+              <option value="gold">Gold (XAU)</option>
+              <option value="silver">Silver (XAG)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="size">Size (oz)</label>
+            <input type="number" id="size" min="1" value="500">
+          </div>
+          <div class="field">
+            <label for="venue">Venue</label>
+            <select id="venue"></select>
+          </div>
+          <div class="field">
+            <label for="limit">Limit</label>
+            <input type="number" id="limit" step="0.01" placeholder="Auto from best venue">
+          </div>
+          <button class="primary" type="submit">Preview route</button>
+        </form>
+        <p class="muted" id="order-feedback">Ready to simulate.</p>
+      </article>
+
+      <article class="panel">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Market ribbon</p>
+            <h3>Asks by venue</h3>
+          </div>
+          <button class="ghost small" id="shuffle">Shuffle spread</button>
+        </header>
+        <div class="ribbon" id="ribbon"></div>
+      </article>
+
+      <article class="panel">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Editable markets</p>
+            <h3>Rename &amp; toggle venues</h3>
+          </div>
+          <div class="pill soft">Front-end only</div>
+        </header>
+        <div class="market-editor" id="market-editor"></div>
+      </article>
+    </section>
+  </div>
+</body>
+</html>

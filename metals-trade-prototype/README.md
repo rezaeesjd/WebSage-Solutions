@@ -17,6 +17,7 @@ A polished single-page prototype that demonstrates how an institutional trading 
 - `index.html` — page structure, layout containers, and semantic sections for the board.
 - `styles.css` — modern UI styling with gradients, cards, ribbons, and responsive grid behavior.
 - `app.js` — all prototype data (markets, history, FX) and rendering logic for cards, chart, watchlist, and form interactions.
+- `modern-wireframe/` — an alternate, production-ready visual exploration with a fresh layout, editable venue list, and currency-aware routing chips.
 
 ## How data and logic work
 - **Markets & pricing**: `markets` defines four sample venues with gold/silver spot, bid/ask, change, spreads, depth, status, and timezone details. These values drive every card, tag, and ribbon element.
@@ -27,6 +28,9 @@ A polished single-page prototype that demonstrates how an institutional trading 
 
 ## Running the prototype
 No build steps are required. Open `index.html` in a browser (or serve the `metals-trade-prototype` folder via any static server) and all assets load locally, with Chart.js pulled from a CDN.
+
+### Modern wireframe view
+For a refreshed layout and editable venue list, open `modern-wireframe/index.html`. It keeps the same predefined markets, FX conversions (USD default, EUR/GBP/JPY options), best-venue chips, and RFQ mock, but updates the visual system to a dark studio theme with simplified cards and a multi-panel grid.
 
 ## Customizing the demo
 - **Add or rename venues**: Update the `markets` array in `app.js` to change venue names, regions, status, spreads, or pricing. The grid, ribbon, best-venue buttons, and RFQ dropdown will update automatically.
