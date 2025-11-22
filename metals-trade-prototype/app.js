@@ -82,6 +82,8 @@ let selectedMetal = 'gold';
 let selectedSide = 'buy';
 let trendChart;
 let marketCompareChart;
+const widthStorageKey = 'marketCardWidths';
+const marketWidths = loadStoredWidths();
 
 const currencySymbols = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
 
@@ -152,6 +154,23 @@ function formatStatus(status) {
     text: normalized === 'open' ? 'Live' : 'Pre-open',
     className: normalized === 'open' ? 'live' : 'pre'
   };
+}
+
+function loadStoredWidths() {
+  try {
+    const saved = localStorage.getItem(widthStorageKey);
+    const parsed = saved ? JSON.parse(saved) : null;
+    if (parsed && typeof parsed === 'object') {
+      return parsed;
+    }
+  } catch (err) {
+    console.warn('Unable to read stored widths', err);
+  }
+  return {};
+}
+
+function persistMarketWidths() {
+  localStorage.setItem(widthStorageKey, JSON.stringify(marketWidths));
 }
 
 function averageMetal(metal) {
@@ -343,11 +362,59 @@ function renderVenueOptions() {
   });
 }
 
+function applyMarketWidth(card, marketId) {
+  const storedWidth = marketWidths[marketId];
+  if (storedWidth) {
+    card.style.flexBasis = `${storedWidth}px`;
+    card.style.width = `${storedWidth}px`;
+  } else {
+    card.style.flexBasis = '260px';
+    card.style.width = '260px';
+  }
+}
+
+function startResize(card, marketId, event) {
+  event.preventDefault();
+  const handle = event.currentTarget;
+  handle.setPointerCapture?.(event.pointerId);
+  const startX = event.clientX;
+  const initialWidth = card.getBoundingClientRect().width;
+  let currentWidth = initialWidth;
+  card.classList.add('resizing');
+
+  const onMove = moveEvent => {
+    const delta = moveEvent.clientX - startX;
+    currentWidth = Math.max(220, Math.min(520, initialWidth + delta));
+    card.style.flexBasis = `${currentWidth}px`;
+    card.style.width = `${currentWidth}px`;
+  };
+
+  const onUp = () => {
+    card.classList.remove('resizing');
+    marketWidths[marketId] = Math.round(currentWidth);
+    persistMarketWidths();
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+  };
+
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+}
+
+function addResizeHandle(card, marketId) {
+  const handle = document.createElement('div');
+  handle.className = 'resize-handle';
+  handle.title = 'Drag to resize';
+  handle.addEventListener('pointerdown', event => startResize(card, marketId, event));
+  card.appendChild(handle);
+}
+
 function renderMarkets() {
   marketGridEl.innerHTML = '';
   markets.forEach(m => {
     const card = document.createElement('div');
     card.className = 'market-card';
+    card.dataset.marketId = m.id;
     const metalData = m.metals[selectedMetal];
     const altMetal = selectedMetal === 'gold' ? 'silver' : 'gold';
     const altData = m.metals[altMetal];
@@ -382,6 +449,8 @@ function renderMarkets() {
       </div>
     `;
 
+    applyMarketWidth(card, m.id);
+    addResizeHandle(card, m.id);
     marketGridEl.appendChild(card);
   });
 }
