@@ -149,7 +149,7 @@ function formatStatus(status) {
   const normalized = status?.toLowerCase() === 'open' ? 'open' : 'pre';
   return {
     text: normalized === 'open' ? 'Live' : 'Pre-open',
-    className: normalized
+    className: normalized === 'open' ? 'live' : 'pre'
   };
 }
 
@@ -302,7 +302,7 @@ function renderMarkets() {
           <div class="market-name">${m.name}</div>
           <div class="status">${m.region} · ${m.timezone}</div>
         </div>
-        <div class="status-pill ${statusMeta.className}">${statusMeta.text}</div>
+        <div class="chip ${statusMeta.className}">${statusMeta.text}</div>
       </header>
       <div class="metric-row">
         <div>
