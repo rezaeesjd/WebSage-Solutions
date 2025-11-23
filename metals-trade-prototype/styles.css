@@ -380,7 +380,7 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 
 .ribbon-panel { gap: 12px; }
-.market-ribbon { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.market-ribbon { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; }
 .ribbon-card {
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -389,6 +389,10 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 0 0 240px;
+  width: 240px;
+  min-width: 220px;
+  position: relative;
 }
 
 .ribbon-head { display: flex; align-items: center; gap: 8px; font-weight: 600; }
@@ -435,7 +439,8 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .metric-row .value { font-weight: 600; }
 .metric-row .chip { padding: 4px 8px; border-radius: 10px; font-size: 12px; border: 1px solid transparent; background: rgba(255,255,255,0.05); text-transform: none; box-shadow: none; }
 
-.market-card.resizing {
+.market-card.resizing,
+.ribbon-card.resizing {
   user-select: none;
   border-color: rgba(124,240,197,0.5);
   box-shadow: 0 0 0 1px rgba(124,240,197,0.2), var(--shadow);
@@ -466,7 +471,9 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 }
 
 .market-card:hover .resize-handle,
-.market-card.resizing .resize-handle {
+.market-card.resizing .resize-handle,
+.ribbon-card:hover .resize-handle,
+.ribbon-card.resizing .resize-handle {
   opacity: 1;
   background: linear-gradient(90deg, transparent, rgba(124,240,197,0.2));
 }
