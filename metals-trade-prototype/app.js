@@ -83,7 +83,7 @@ let selectedSide = 'buy';
 let trendChart;
 let marketCompareChart;
 const widthStorageKey = 'marketCardWidths';
-const marketWidths = loadStoredWidths();
+const marketWidths = {};
 
 const currencySymbols = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
 
@@ -158,6 +158,7 @@ function formatStatus(status) {
 
 function loadStoredWidths() {
   try {
+    if (typeof localStorage === 'undefined') return {};
     const saved = localStorage.getItem(widthStorageKey);
     const parsed = saved ? JSON.parse(saved) : null;
     if (parsed && typeof parsed === 'object') {
@@ -170,6 +171,7 @@ function loadStoredWidths() {
 }
 
 function persistMarketWidths() {
+  if (typeof localStorage === 'undefined') return;
   localStorage.setItem(widthStorageKey, JSON.stringify(marketWidths));
 }
 
@@ -376,7 +378,13 @@ function applyMarketWidth(card, marketId) {
 function startResize(card, marketId, event) {
   event.preventDefault();
   const handle = event.currentTarget;
-  handle.setPointerCapture?.(event.pointerId);
+  const isPointerEvent = typeof event.pointerId === 'number';
+  const moveEvent = isPointerEvent ? 'pointermove' : 'mousemove';
+  const upEvent = isPointerEvent ? 'pointerup' : 'mouseup';
+
+  if (isPointerEvent && handle.setPointerCapture) {
+    handle.setPointerCapture(event.pointerId);
+  }
   const startX = event.clientX;
   const initialWidth = card.getBoundingClientRect().width;
   let currentWidth = initialWidth;
@@ -393,12 +401,16 @@ function startResize(card, marketId, event) {
     card.classList.remove('resizing');
     marketWidths[marketId] = Math.round(currentWidth);
     persistMarketWidths();
-    window.removeEventListener('pointermove', onMove);
-    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener(moveEvent, onMove);
+    window.removeEventListener(upEvent, onUp);
+    window.removeEventListener('pointercancel', onUp);
   };
 
-  window.addEventListener('pointermove', onMove);
-  window.addEventListener('pointerup', onUp);
+  window.addEventListener(moveEvent, onMove);
+  window.addEventListener(upEvent, onUp);
+  if (isPointerEvent) {
+    window.addEventListener('pointercancel', onUp);
+  }
 }
 
 function addResizeHandle(card, marketId) {
@@ -682,6 +694,7 @@ function refreshWatch() {
 }
 
 function init() {
+  Object.assign(marketWidths, loadStoredWidths());
   renderSummary();
   renderMarketTags();
   renderVenueOptions();

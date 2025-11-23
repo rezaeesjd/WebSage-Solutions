@@ -451,16 +451,24 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(90deg, transparent, rgba(124,240,197,0.08));
+  background: linear-gradient(90deg, transparent, rgba(124,240,197,0.1));
   border-radius: 0 14px 14px 0;
+  opacity: 0.6;
+  transition: opacity 0.15s ease, background 0.15s ease;
 }
 
 .resize-handle::after {
   content: '';
   width: 2px;
   height: 28px;
-  background: rgba(232,237,247,0.4);
+  background: rgba(232,237,247,0.7);
   border-radius: 2px;
+}
+
+.market-card:hover .resize-handle,
+.market-card.resizing .resize-handle {
+  opacity: 1;
+  background: linear-gradient(90deg, transparent, rgba(124,240,197,0.2));
 }
 
 .order-form { display: flex; flex-direction: column; gap: 12px; }
