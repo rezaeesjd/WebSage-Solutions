@@ -83,7 +83,9 @@ let selectedSide = 'buy';
 let trendChart;
 let marketCompareChart;
 const widthStorageKey = 'marketCardWidths';
+const ribbonWidthStorageKey = 'marketRibbonWidths';
 const marketWidths = {};
+const ribbonWidths = {};
 
 const currencySymbols = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
 
@@ -156,10 +158,10 @@ function formatStatus(status) {
   };
 }
 
-function loadStoredWidths() {
+function loadStoredWidths(key) {
   try {
     if (typeof localStorage === 'undefined') return {};
-    const saved = localStorage.getItem(widthStorageKey);
+    const saved = localStorage.getItem(key);
     const parsed = saved ? JSON.parse(saved) : null;
     if (parsed && typeof parsed === 'object') {
       return parsed;
@@ -170,9 +172,9 @@ function loadStoredWidths() {
   return {};
 }
 
-function persistMarketWidths() {
+function persistWidths(key, widths) {
   if (typeof localStorage === 'undefined') return;
-  localStorage.setItem(widthStorageKey, JSON.stringify(marketWidths));
+  localStorage.setItem(key, JSON.stringify(widths));
 }
 
 function averageMetal(metal) {
@@ -283,6 +285,8 @@ function renderMarketRibbon() {
       </div>
       <p class="muted">Depth ${m.depth.gold.toFixed(1)}m / ${m.depth.silver.toFixed(1)}m · ${m.timezone}</p>
     `;
+    applyStoredWidth(card, ribbonWidths, m.id, 220);
+    addResizeHandle(card, { store: ribbonWidths, storageKey: ribbonWidthStorageKey, itemId: m.id });
     marketRibbonEl.appendChild(card);
   });
 }
@@ -364,18 +368,14 @@ function renderVenueOptions() {
   });
 }
 
-function applyMarketWidth(card, marketId) {
-  const storedWidth = marketWidths[marketId];
-  if (storedWidth) {
-    card.style.flexBasis = `${storedWidth}px`;
-    card.style.width = `${storedWidth}px`;
-  } else {
-    card.style.flexBasis = '260px';
-    card.style.width = '260px';
-  }
+function applyStoredWidth(card, store, itemId, defaultWidth) {
+  const storedWidth = store[itemId];
+  const width = storedWidth || defaultWidth;
+  card.style.flexBasis = `${width}px`;
+  card.style.width = `${width}px`;
 }
 
-function startResize(card, marketId, event) {
+function startResize(card, store, storageKey, itemId, event) {
   event.preventDefault();
   const handle = event.currentTarget;
   const isPointerEvent = typeof event.pointerId === 'number';
@@ -399,8 +399,8 @@ function startResize(card, marketId, event) {
 
   const onUp = () => {
     card.classList.remove('resizing');
-    marketWidths[marketId] = Math.round(currentWidth);
-    persistMarketWidths();
+    store[itemId] = Math.round(currentWidth);
+    persistWidths(storageKey, store);
     window.removeEventListener(moveEvent, onMove);
     window.removeEventListener(upEvent, onUp);
     window.removeEventListener('pointercancel', onUp);
@@ -413,11 +413,11 @@ function startResize(card, marketId, event) {
   }
 }
 
-function addResizeHandle(card, marketId) {
+function addResizeHandle(card, { store, storageKey, itemId }) {
   const handle = document.createElement('div');
   handle.className = 'resize-handle';
   handle.title = 'Drag to resize';
-  handle.addEventListener('pointerdown', event => startResize(card, marketId, event));
+  handle.addEventListener('pointerdown', event => startResize(card, store, storageKey, itemId, event));
   card.appendChild(handle);
 }
 
@@ -461,8 +461,8 @@ function renderMarkets() {
       </div>
     `;
 
-    applyMarketWidth(card, m.id);
-    addResizeHandle(card, m.id);
+    applyStoredWidth(card, marketWidths, m.id, 260);
+    addResizeHandle(card, { store: marketWidths, storageKey: widthStorageKey, itemId: m.id });
     marketGridEl.appendChild(card);
   });
 }
@@ -694,7 +694,8 @@ function refreshWatch() {
 }
 
 function init() {
-  Object.assign(marketWidths, loadStoredWidths());
+  Object.assign(marketWidths, loadStoredWidths(widthStorageKey));
+  Object.assign(ribbonWidths, loadStoredWidths(ribbonWidthStorageKey));
   renderSummary();
   renderMarketTags();
   renderVenueOptions();
