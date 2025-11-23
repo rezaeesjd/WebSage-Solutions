@@ -360,8 +360,8 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 }
 
 .layout-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
 }
 
@@ -374,8 +374,9 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
   display: flex;
   flex-direction: column;
   gap: 14px;
+  flex: 1 1 320px;
 }
-.panel.wide { grid-column: 1 / -1; }
+.panel.wide { flex-basis: 100%; }
 .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 
 .ribbon-panel { gap: 12px; }
@@ -407,9 +408,10 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .segmented.full { width: 100%; }
 
 .market-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
+  align-items: stretch;
 }
 .market-card {
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
@@ -419,6 +421,11 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 0 0 260px;
+  width: 260px;
+  min-width: 220px;
+  position: relative;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .market-card header { display: flex; justify-content: space-between; align-items: center; }
 .market-name { font-weight: 600; }
@@ -427,6 +434,42 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .metric-row .label { color: var(--muted); font-size: 13px; }
 .metric-row .value { font-weight: 600; }
 .metric-row .chip { padding: 4px 8px; border-radius: 10px; font-size: 12px; border: 1px solid transparent; background: rgba(255,255,255,0.05); text-transform: none; box-shadow: none; }
+
+.market-card.resizing {
+  user-select: none;
+  border-color: rgba(124,240,197,0.5);
+  box-shadow: 0 0 0 1px rgba(124,240,197,0.2), var(--shadow);
+}
+
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 12px;
+  height: 100%;
+  cursor: ew-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, transparent, rgba(124,240,197,0.1));
+  border-radius: 0 14px 14px 0;
+  opacity: 0.6;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.resize-handle::after {
+  content: '';
+  width: 2px;
+  height: 28px;
+  background: rgba(232,237,247,0.7);
+  border-radius: 2px;
+}
+
+.market-card:hover .resize-handle,
+.market-card.resizing .resize-handle {
+  opacity: 1;
+  background: linear-gradient(90deg, transparent, rgba(124,240,197,0.2));
+}
 
 .order-form { display: flex; flex-direction: column; gap: 12px; }
 .form-row { display: flex; flex-direction: column; gap: 6px; }
