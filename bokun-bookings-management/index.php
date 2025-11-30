@@ -43,6 +43,15 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
     <meta name="twitter:description" content="<?= esc($metaDescription) ?>">
     <?php if ($ogImage): ?><meta name="twitter:image" content="<?= esc($ogImage) ?>"><?php endif; ?>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+        <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5FKLV746D"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-V5FKLV746D');
+    </script>
     <style>
         :root {
             color-scheme: light dark;
@@ -270,7 +279,14 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
     <h1><?= esc($heroHeading) ?></h1>
     <p><?= esc($heroBody) ?></p>
     <div class="cta-row">
-        <a class="cta-button cta-primary" href="<?= esc($downloadUrl) ?>" target="_blank" rel="noopener">
+        <a
+            class="cta-button cta-primary"
+            href="<?= esc($downloadUrl) ?>"
+            target="_blank"
+            rel="noopener"
+            data-download-cta
+            data-plugin-slug="<?= esc($pluginSettings['slug'] ?? 'bokun-bookings-management') ?>"
+        >
             <?= esc($downloadLabel) ?>
         </a>
         <a class="cta-button cta-secondary" href="<?= esc($githubUrl) ?>" target="_blank" rel="noopener">
@@ -445,5 +461,29 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
         <p>Email <a href="mailto:<?= esc($contactEmail) ?>"><?= esc($contactEmail) ?></a> with deployment questions, feature requests, or support needs.</p>
     </section>
 </main>
+<script>
+    (function () {
+        var downloadLink = document.querySelector('[data-download-cta]');
+        if (!downloadLink) {
+            return;
+        }
+
+        function trackDownloadClick() {
+            if (typeof gtag !== 'function') {
+                return;
+            }
+
+            gtag('event', 'plugin_download_click', {
+                plugin_slug: downloadLink.getAttribute('data-plugin-slug') || '',
+                download_url: downloadLink.href,
+                event_category: 'engagement',
+                event_label: 'plugin_download',
+                value: 1,
+            });
+        }
+
+        downloadLink.addEventListener('click', trackDownloadClick);
+    })();
+</script>
 </body>
 </html>
