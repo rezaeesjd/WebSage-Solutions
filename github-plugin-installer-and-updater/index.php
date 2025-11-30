@@ -314,7 +314,14 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
         <h1><?= esc($heroHeading) ?></h1>
         <p><?= esc($heroBody) ?></p>
         <div class="cta-row">
-            <a class="cta-button cta-primary" href="<?= esc($downloadUrl) ?>"><?= esc($downloadLabel) ?></a>
+            <a
+                class="cta-button cta-primary"
+                href="<?= esc($downloadUrl) ?>"
+                data-download-cta
+                data-plugin-slug="<?= esc($pluginSettings['slug'] ?? 'github-plugin-installer-and-updater') ?>"
+            >
+                <?= esc($downloadLabel) ?>
+            </a>
             <a class="cta-button cta-secondary" href="<?= esc($githubUrl) ?>"><?= esc($githubLabel) ?></a>
         </div>
     </header>
@@ -429,6 +436,30 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
     </footer>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+    <script>
+        (function () {
+            var downloadLink = document.querySelector('[data-download-cta]');
+            if (!downloadLink) {
+                return;
+            }
+
+            function trackDownloadClick() {
+                if (typeof gtag !== 'function') {
+                    return;
+                }
+
+                gtag('event', 'plugin_download_click', {
+                    plugin_slug: downloadLink.getAttribute('data-plugin-slug') || '',
+                    download_url: downloadLink.href,
+                    event_category: 'engagement',
+                    event_label: 'plugin_download',
+                    value: 1,
+                });
+            }
+
+            downloadLink.addEventListener('click', trackDownloadClick);
+        })();
     </script>
 </body>
 </html>
