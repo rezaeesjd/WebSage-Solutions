@@ -296,11 +296,11 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
 </header>
 <main>
     <section>
-        <h2>Purpose-built Bokun imports for WordPress</h2>
-        <p>Bokun Bookings Management lets tour and activity operators pull reservations from the Bokun API, persist them as the
-            <code>bokun_booking</code> custom post type, and make the data actionable inside WordPress dashboards, Elementor
-            widgets, or custom workflows. Multiple API credentials, ARIA-friendly progress bars, and deeply integrated
-            shortcodes mean staff can fetch bookings without touching wp-admin.</p>
+        <h2>Purpose-built Bokun booking imports for WordPress</h2>
+        <p>Bokun Bookings Management helps tour and activity operators sync Bokun reservations into WordPress, store them as the
+            <code>bokun_booking</code> custom post type, and activate the data in dashboards, Elementor widgets, or custom workflows.
+            Multiple API credentials, ARIA-friendly progress bars, and front-end shortcodes mean staff can fetch bookings without
+            touching wp-admin.</p>
         <ul class="metadata-list">
             <li><strong>WordPress</strong><br>6.0 or newer</li>
             <li><strong>PHP</strong><br>7.4+ with cURL enabled</li>
@@ -329,7 +329,7 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
     </section>
 
     <section>
-        <h2>Feature highlights</h2>
+        <h2>Feature highlights for Bokun booking automation</h2>
         <div class="grid">
             <div class="card">
                 <h3>Multiple credentials</h3>
@@ -363,6 +363,15 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
     </section>
 
     <section>
+        <h2>Common Bokun WordPress use cases</h2>
+        <ul>
+            <li><strong>Operations dashboards:</strong> give staff a shared view of upcoming tours without WordPress admin access.</li>
+            <li><strong>Multi-brand imports:</strong> manage multiple Bokun tenants with separate API credentials and dashboards.</li>
+            <li><strong>Customer service teams:</strong> search booking history, export CSVs, and track changes from one table.</li>
+        </ul>
+    </section>
+
+    <section>
         <h2>Installation</h2>
         <ol>
             <li>Download the latest release zip via the button above or clone the repository into <code>wp-content/plugins/</code>.</li>
@@ -383,7 +392,7 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
     </section>
 
     <section>
-        <h2>Import behavior</h2>
+        <h2>Import behavior and data handling</h2>
         <ul>
             <li>Every credential pair is normalized into a numbered import context (API 1, API 2, etc.) that runs sequentially.</li>
             <li>The plugin calls <code>/booking.json/booking-search</code> with a default date window from yesterday through one month ahead—filter <code>bokun_booking_items_per_page</code> to adjust pagination.</li>
@@ -423,7 +432,7 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
     </section>
 
     <section>
-        <h2>Booking history UI</h2>
+        <h2>Booking history UI for teams</h2>
         <p>The built-in Booking History submenu and shortcode both query <code>wp_bokun_booking_history</code> and render a responsive DataTable with collapsible filters, column search, CSV export, and capability checks. The view handles missing tables gracefully—for example when the plugin has been uploaded but not activated yet.</p>
     </section>
 

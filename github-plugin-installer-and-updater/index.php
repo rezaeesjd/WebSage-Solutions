@@ -327,8 +327,8 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
     </header>
     <main>
         <section id="plugin-metadata">
-            <h2>Plugin metadata &amp; compatibility</h2>
-            <p>Everything WordPress.org expects is packaged inside the accompanying <code>readme.txt</code>. Here are the highlights:</p>
+            <h2>WordPress GitHub plugin metadata &amp; compatibility</h2>
+            <p>The plugin ships with a WordPress-friendly <code>readme.txt</code> so teams can quickly confirm requirements and update cadence.</p>
             <ul class="metadata-list">
                 <li><strong>Contributors:</strong> Websage Solutions Lab</li>
                 <li><strong>Requires WordPress:</strong> 6.0 or higher</li>
@@ -339,16 +339,16 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
             </ul>
         </section>
         <section id="why-release">
-            <h2>Why release it?</h2>
-            <p>Agencies and product teams repeatedly ship private plugins that never touch WordPress.org. Manual zip uploads slow the process, break automation, and make it hard for non-technical site managers to help. GitHub Plugin Installer and Updater replaces that manual work with an interface that understands GitHub releases.</p>
-            <blockquote>“Install or refresh plugins directly from GitHub, keep every environment aligned, and document which repository powers each build.”</blockquote>
+            <h2>Why teams install WordPress plugins from GitHub</h2>
+            <p>Agencies, product teams, and SaaS companies often maintain private WordPress plugins that never go to WordPress.org. Manual zip uploads slow releases, create version drift, and block non-technical teammates. GitHub Plugin Installer &amp; Updater replaces the manual workflow with a GitHub-aware installer that keeps every environment aligned.</p>
+            <blockquote>“Deploy private WordPress plugins from GitHub, keep every site synced, and track exactly which repository powers each release.”</blockquote>
         </section>
         <section id="key-capabilities">
-            <h2>Key capabilities</h2>
+            <h2>Key capabilities for GitHub-managed WordPress plugins</h2>
             <div class="grid">
                 <div class="card">
                     <h3>Install from repositories</h3>
-                    <p>Paste any GitHub repository URL, choose a branch or tag, and let the plugin handle the download, extraction, and activation.</p>
+                    <p>Paste any GitHub repository URL, choose a branch or tag, and let the plugin handle the download, extraction, and activation inside WordPress.</p>
                 </div>
                 <div class="card">
                     <h3>Managed Plugins table</h3>
@@ -360,7 +360,7 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
                 </div>
                 <div class="card">
                     <h3>Private repository support</h3>
-                    <p>Store a personal access token securely in WordPress options to authenticate downloads from private repos.</p>
+                    <p>Store a GitHub personal access token securely in WordPress options to authenticate downloads from private repos.</p>
                 </div>
                 <div class="card">
                     <h3>Self-update aware</h3>
@@ -372,8 +372,16 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
                 </div>
             </div>
         </section>
+        <section id="use-cases">
+            <h2>WordPress GitHub plugin update use cases</h2>
+            <ul>
+                <li><strong>Agency rollouts:</strong> ship private client plugins from GitHub without asking editors to upload zips.</li>
+                <li><strong>SaaS integrations:</strong> distribute add-ons and keep version parity across staging, QA, and production.</li>
+                <li><strong>Product teams:</strong> map each installed plugin to its repo for faster support and clearer release audits.</li>
+            </ul>
+        </section>
         <section id="feature-list">
-            <h2>Feature checklist</h2>
+            <h2>Feature checklist for GitHub plugin deployments</h2>
             <ul class="pill-list">
                 <li>Install from GitHub repository URL</li>
                 <li>Managed Plugins table</li>
@@ -383,7 +391,7 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
                 <li>WordPress multisite compatibility</li>
             </ul>
             <h3>Why teams choose Websage Solutions</h3>
-            <p>Manual zip uploads slow down releases, especially when juggling client sites. Websage Solutions created this plugin so agencies and product teams can standardize deployments, cut the wait for WordPress.org approvals, give non-technical teams safe access to updates, and audit repositories powering each plugin at a glance.</p>
+            <p>Manual zip uploads slow releases, especially when juggling client sites. Websage Solutions built this plugin so teams can standardize deployments, cut the wait for WordPress.org approvals, give non-technical teams safe access to updates, and audit repositories powering each plugin at a glance.</p>
         </section>
         <section id="getting-started">
             <h2>Getting started</h2>
@@ -402,6 +410,8 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
             <p>Absolutely. Use the Managed Plugins table to map each installed plugin to its GitHub repository and branch or tag.</p>
             <h3>How do self-updates work?</h3>
             <p>Provide the helper plugin's own repository URL and it will notify you when a new release is available. You can trigger the update from the settings screen or directly from the Plugins list.</p>
+            <h3>Do I need GitHub releases?</h3>
+            <p>No. You can pull from any repository branch or tag. Releases make it easier to track versions, but the installer works with standard branches too.</p>
         </section>
         <section id="release-notes">
             <h2>Release notes</h2>

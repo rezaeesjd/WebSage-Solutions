@@ -303,10 +303,10 @@ $contactEmail    = $siteSettings['contact_email'] ?? 'lab@websagesolutions.com';
 </header>
 <main>
     <section>
-        <h2>Why Bokun Bookings Management?</h2>
-        <p>Import Bokun to WP Ecommerce and Custom Fields gives tour and activity teams a first-class booking workspace in\
-side WordPress. Fetch reservations via the Bokun API, enrich them with taxonomies and custom fields, and expose shortcodes so\
- staff can trigger imports or review history without touching wp-admin.</p>
+        <h2>Why sync Bokun with WordPress ecommerce?</h2>
+        <p>Import Bokun to WP Ecommerce and Custom Fields gives tour and activity teams a first-class booking workspace inside
+            WordPress. Fetch reservations via the Bokun API, enrich them with taxonomies and custom fields, and expose shortcodes so
+            staff can trigger imports or review history without touching wp-admin.</p>
         <ul class="metadata-list">
             <li><strong>WordPress</strong><br>Version 6.0 or newer</li>
             <li><strong>PHP</strong><br>7.4+ with cURL enabled</li>
@@ -316,7 +316,7 @@ side WordPress. Fetch reservations via the Bokun API, enrich them with taxonomie
     </section>
 
     <section>
-        <h2>Feature Highlights</h2>
+        <h2>Feature highlights for Bokun ecommerce integrations</h2>
         <div class="grid">
             <div class="card">
                 <h3>Multiple API Credentials</h3>
@@ -350,6 +350,15 @@ side WordPress. Fetch reservations via the Bokun API, enrich them with taxonomie
     </section>
 
     <section>
+        <h2>Bokun to WordPress ecommerce use cases</h2>
+        <ul>
+            <li><strong>Tour operators:</strong> display upcoming reservations in WordPress dashboards for daily ops.</li>
+            <li><strong>Multi-location teams:</strong> track bookings across multiple Bokun credentials in one WordPress site.</li>
+            <li><strong>Reporting workflows:</strong> export booking history to CSV and enrich it with custom fields.</li>
+        </ul>
+    </section>
+
+    <section>
         <h2>Installation</h2>
         <ol>
             <li>Download the plugin ZIP using the button above.</li>
@@ -371,7 +380,7 @@ side WordPress. Fetch reservations via the Bokun API, enrich them with taxonomie
     </section>
 
     <section>
-        <h2>Import Behavior</h2>
+        <h2>Import behavior and data handling</h2>
         <ul>
             <li>Every credential set becomes a sequential import context (API 1, API 2, etc.).</li>
             <li>The plugin calls <code>/booking.json/booking-search</code> with a default window from yesterday through one month ahead. Filter <code>bokun_booking_items_per_page</code> to change pagination.</li>
@@ -411,7 +420,7 @@ side WordPress. Fetch reservations via the Bokun API, enrich them with taxonomie
     </section>
 
     <section>
-        <h2>Admin Booking History</h2>
+        <h2>Admin booking history &amp; exports</h2>
         <p>The plugin ships with a Booking History submenu that displays the most recent entries stored in <code>wp_bokun_booking_history</code>. Users can filter by action, status, actor, and source, plus download the visible dataset as CSV through DataTables Buttons and JSZip. The view gracefully handles missing tables (e.g., before activation) and respects capability checks.</p>
     </section>
 
