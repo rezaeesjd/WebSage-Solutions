@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Metals Desk | Gold & Silver Trading</title>
+  <title>Metals Desk | Gold Trading</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
         <div class="logo">M</div>
         <div>
           <p class="eyebrow">Metals Desk</p>
-          <h1>Gold &amp; Silver Tradeboard</h1>
+          <h1>Gold Tradeboard</h1>
         </div>
       </div>
       <div class="toolbar">
@@ -43,11 +43,11 @@
           <input id="metal-search" type="search" placeholder="Search symbols e.g. XAU, XAG, platinum" />
           <span class="kbd">⌘K</span>
         </div>
-        <p class="muted">Prototype search is fixed to Gold and Silver to illustrate the dual-book view.</p>
+        <p class="muted">Prototype search is fixed to Gold to illustrate the single-metal desk view.</p>
       </div>
       <div class="token-stack">
         <div class="token active">Gold (XAU) · Selected</div>
-        <div class="token active">Silver (XAG) · Selected</div>
+        <div class="token ghost">Silver (XAG)</div>
         <div class="token ghost">Add another metal</div>
       </div>
     </section>
@@ -55,20 +55,18 @@
     <section class="compare-hero">
       <div class="query-meta">
         <p class="eyebrow">Prototype preview</p>
-        <h2><strong>Compare gold and silver</strong> across markets to pick where to buy now.</h2>
-        <p class="muted" id="pinned-note"><strong>USD-first</strong> board with history overlays and 4 venues so you can scan prices by country and choose the best fit.</p>
+        <h2><strong>Compare gold</strong> across markets to pick where to buy now.</h2>
+        <p class="muted" id="pinned-note"><strong>USD-first</strong> gold board with local currency and FX overlays so you can scan prices by market and pick the best fit.</p>
         <div class="token-stack dense">
           <div class="token active" id="gold-currency-token">Gold tracked in USD</div>
-          <div class="token active" id="silver-currency-token">Silver tracked in USD</div>
           <div class="token ghost">Change currency to view conversions</div>
         </div>
         <div class="hero-meta-grid">
           <div>
             <p class="eyebrow">Selected metals</p>
-            <p class="muted">Search locked to two items so you can compare them venue-by-venue.</p>
+            <p class="muted">Search locked to one item so you can compare gold venue-by-venue.</p>
             <ul class="pin-list" id="pin-list">
               <li><span class="dot gold"></span>Gold · USD spot overlays</li>
-              <li><span class="dot silver"></span>Silver · USD spot overlays</li>
             </ul>
           </div>
           <div>
@@ -83,10 +81,20 @@
         <header class="panel-head">
           <div>
             <p class="eyebrow">Performance</p>
-            <h3>Composite Curve &amp; Venue Overlays</h3>
+            <h3>Gold Price, Local FX &amp; Venue Overlays</h3>
           </div>
           <div class="pill pill-soft" id="chart-label">Gold | USD</div>
         </header>
+        <div class="chart-controls">
+          <div class="filter-group">
+            <span class="filter-label">Markets</span>
+            <div class="filter-options" id="market-filters"></div>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Series</span>
+            <div class="filter-options" id="series-filters"></div>
+          </div>
+        </div>
         <canvas id="trendChart" height="320"></canvas>
         <div class="chart-legend" id="chart-legend"></div>
       </article>
@@ -177,9 +185,9 @@
         <header class="panel-head">
           <div>
             <p class="eyebrow">Venue Contrast</p>
-            <h3>Gold vs Silver by Market</h3>
+            <h3>Gold Pricing by Market</h3>
           </div>
-          <div class="pill pill-soft">Prices in USD by default</div>
+          <div class="pill pill-soft">Gold focus with USD defaults</div>
         </header>
         <div class="market-ribbon" id="market-ribbon"></div>
       </article>
