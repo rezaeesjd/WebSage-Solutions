@@ -81,6 +81,15 @@ const fxHistory = {
   dgcx: [3.67, 3.67, 3.67, 3.66, 3.67, 3.67, 3.67]
 };
 
+const periodOptions = [
+  { id: 'day', label: 'Day', labels: marketHistory.labels },
+  { id: 'week', label: 'Week', labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+  { id: 'month', label: 'Month', labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4', 'Wk 5', 'Wk 6', 'Wk 7', 'Wk 8'] },
+  { id: 'year', label: 'Year', labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] },
+  { id: 'fiveYear', label: '5 Year', labels: ['2019', '2020', '2021', '2022', '2023', '2024'] },
+  { id: 'all', label: 'All time', labels: ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'] }
+];
+
 const watchlist = [
   { metal: 'Gold', venue: 'Spot Pool', bid: 2027.7, ask: 2029.0, trend: 0.42 },
   { metal: 'Gold', venue: 'Options Curve', bid: 2024.2, ask: 2026.5, trend: -0.08 },
@@ -94,7 +103,8 @@ let selectedSide = 'buy';
 let trendChart;
 let marketCompareChart;
 const selectedMarketIds = new Set(markets.map(m => m.id));
-const selectedSeries = new Set(['usd', 'local', 'fx']);
+const selectedSeries = new Set(['usd']);
+let selectedPeriod = 'day';
 const widthStorageKey = 'marketCardWidths';
 const ribbonWidthStorageKey = 'marketRibbonWidths';
 const marketWidths = {};
@@ -113,12 +123,14 @@ const compareResultsEl = document.getElementById('compare-results');
 
 const chartLabel = document.getElementById('chart-label');
 const chartLegend = document.getElementById('chart-legend');
+const chartGrowth = document.getElementById('chart-growth');
 const compareLegend = document.getElementById('compare-legend');
 const compareChartLabel = document.getElementById('compare-chart-label');
 const pinnedNote = document.getElementById('pinned-note');
 const heroMarketList = document.getElementById('hero-market-list');
 const marketFiltersEl = document.getElementById('market-filters');
 const seriesFiltersEl = document.getElementById('series-filters');
+const timeFiltersEl = document.getElementById('time-filters');
 const currencyTokens = {
   gold: document.getElementById('gold-currency-token'),
   silver: document.getElementById('silver-currency-token')
@@ -175,6 +187,29 @@ function formatFxRate(value) {
 function formatDelta(value) {
   const sign = value > 0 ? '+' : '';
   return `${sign}${value.toFixed(2)}%`;
+}
+
+function buildSeries(baseSeries, points) {
+  if (!Array.isArray(baseSeries) || baseSeries.length === 0) return [];
+  if (points <= 1) return [baseSeries[0]];
+  if (points === baseSeries.length) return [...baseSeries];
+  const start = baseSeries[0];
+  const end = baseSeries[baseSeries.length - 1];
+  const span = end - start;
+  return Array.from({ length: points }, (_, idx) => {
+    const ratio = idx / (points - 1);
+    const curve = Math.sin(ratio * Math.PI) * span * 0.04;
+    return +(start + span * ratio + curve).toFixed(2);
+  });
+}
+
+function getPeriodDefinition() {
+  return periodOptions.find(option => option.id === selectedPeriod) || periodOptions[0];
+}
+
+function formatGrowthValue(seriesType, delta) {
+  if (seriesType === 'fx') return formatFxRate(delta);
+  return formatNumber(delta);
 }
 
 function formatStatus(status) {
@@ -519,11 +554,18 @@ function renderChart() {
   const ctx = document.getElementById('trendChart');
   const palette = ['#7cf0c5', '#6ea8ff', '#ffd166', '#f08f8f'];
   const history = marketHistory.gold;
+  const periodDefinition = getPeriodDefinition();
+  const labels = periodDefinition.labels;
   const seriesTypes = [
     { id: 'usd', label: 'Gold USD', dash: [] },
     { id: 'local', label: 'Gold Local', dash: [6, 4] },
     { id: 'fx', label: 'FX rate', dash: [2, 6] }
   ];
+  const primarySeriesType = selectedSeries.has('usd')
+    ? 'usd'
+    : selectedSeries.has('local')
+      ? 'local'
+      : 'fx';
 
   if (trendChart) trendChart.destroy();
 
@@ -532,13 +574,15 @@ function renderChart() {
     const venue = markets.find(m => m.id === venueId);
     const color = palette[idx % palette.length];
     const localRate = currencyRates[venue?.currency] || 1;
+    const baseSeries = buildSeries(series, labels.length);
+    const baseFxSeries = buildSeries(fxHistory[venueId] || [], labels.length);
     return seriesTypes.flatMap(seriesType => {
       if (!selectedSeries.has(seriesType.id)) return [];
       const data = seriesType.id === 'usd'
-        ? series
+        ? baseSeries
         : seriesType.id === 'local'
-          ? series.map(v => +(v * localRate).toFixed(2))
-          : (fxHistory[venueId] || []);
+          ? baseSeries.map(v => +(v * localRate).toFixed(2))
+          : baseFxSeries;
       return [{
         label: `${venue?.name || venueId} · ${seriesType.label}`,
         data,
@@ -557,7 +601,7 @@ function renderChart() {
   trendChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: marketHistory.labels,
+      labels,
       datasets
     },
     options: {
@@ -583,7 +627,11 @@ function renderChart() {
     }
   });
 
-  chartLabel.textContent = `Gold | USD, local & FX overlays`;
+  const activeSeriesLabels = seriesTypes
+    .filter(series => selectedSeries.has(series.id))
+    .map(series => series.label)
+    .join(', ');
+  chartLabel.textContent = `Gold | ${activeSeriesLabels} · ${periodDefinition.label}`;
   chartLegend.innerHTML = '';
   datasets.forEach(ds => {
     const legendItem = document.createElement('div');
@@ -591,13 +639,49 @@ function renderChart() {
     legendItem.innerHTML = `<span class="legend-swatch" style="background:${ds.borderColor}"></span>${ds.label}`;
     chartLegend.appendChild(legendItem);
   });
+
+  if (chartGrowth) {
+    chartGrowth.innerHTML = '';
+    const growthTitle = document.createElement('div');
+    growthTitle.className = 'growth-title';
+    growthTitle.textContent = `Change over ${periodDefinition.label.toLowerCase()}`;
+    chartGrowth.appendChild(growthTitle);
+
+    Object.entries(history).forEach(([venueId, series], idx) => {
+      if (!selectedMarketIds.has(venueId)) return;
+      const venue = markets.find(m => m.id === venueId);
+      const localRate = currencyRates[venue?.currency] || 1;
+      const baseSeries = buildSeries(series, labels.length);
+      const baseFxSeries = buildSeries(fxHistory[venueId] || [], labels.length);
+      const data = primarySeriesType === 'usd'
+        ? baseSeries
+        : primarySeriesType === 'local'
+          ? baseSeries.map(v => +(v * localRate).toFixed(2))
+          : baseFxSeries;
+      const start = data[0];
+      const end = data[data.length - 1];
+      const delta = +(end - start).toFixed(2);
+      const percent = start ? (delta / start) * 100 : 0;
+      const sign = delta > 0 ? '+' : '';
+      const color = palette[idx % palette.length];
+      const item = document.createElement('div');
+      item.className = 'growth-item';
+      item.innerHTML = `
+        <span class="legend-swatch" style="background:${color}"></span>
+        <span class="growth-name">${venue?.name || venueId}</span>
+        <span class="growth-value">${sign}${formatGrowthValue(primarySeriesType, delta)} (${formatDelta(percent)})</span>
+      `;
+      chartGrowth.appendChild(item);
+    });
+  }
 }
 
 function renderChartFilters() {
-  if (!marketFiltersEl || !seriesFiltersEl) return;
+  if (!marketFiltersEl || !seriesFiltersEl || !timeFiltersEl) return;
 
   marketFiltersEl.innerHTML = '';
   seriesFiltersEl.innerHTML = '';
+  timeFiltersEl.innerHTML = '';
 
   const allMarketsSelected = selectedMarketIds.size === markets.length;
   const allMarketBtn = document.createElement('button');
@@ -649,6 +733,18 @@ function renderChartFilters() {
       renderChart();
     });
     seriesFiltersEl.appendChild(btn);
+  });
+
+  periodOptions.forEach(option => {
+    const btn = document.createElement('button');
+    btn.className = `filter-chip${selectedPeriod === option.id ? ' active' : ''}`;
+    btn.textContent = option.label;
+    btn.addEventListener('click', () => {
+      selectedPeriod = option.id;
+      renderChartFilters();
+      renderChart();
+    });
+    timeFiltersEl.appendChild(btn);
   });
 }
 
