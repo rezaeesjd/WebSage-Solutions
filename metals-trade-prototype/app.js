@@ -254,6 +254,12 @@ function formatDelta(value) {
   return `${sign}${value.toFixed(2)}%`;
 }
 
+function formatDifference(value) {
+  if (!Number.isFinite(value)) return '0.00%';
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${value.toFixed(2)}%`;
+}
+
 function buildSeries(baseSeries, points) {
   if (!Array.isArray(baseSeries) || baseSeries.length === 0) return [];
   if (points <= 1) return [baseSeries[0]];
@@ -328,6 +334,94 @@ function averageMetal(metal) {
     depth: totals.depth,
     change: totals.change / count
   };
+}
+
+function getChartHoverTooltip() {
+  let tooltipEl = document.getElementById('chart-hover-tooltip');
+  if (tooltipEl) return tooltipEl;
+
+  tooltipEl = document.createElement('div');
+  tooltipEl.id = 'chart-hover-tooltip';
+  tooltipEl.className = 'chart-hover-tooltip';
+  tooltipEl.style.opacity = 0;
+  document.body.appendChild(tooltipEl);
+  return tooltipEl;
+}
+
+function renderComparisonTooltip(context) {
+  const { chart, tooltip } = context;
+  const tooltipEl = getChartHoverTooltip();
+
+  if (!tooltip || tooltip.opacity === 0) {
+    tooltipEl.style.opacity = 0;
+    return;
+  }
+
+  const dataPoint = tooltip.dataPoints?.[0];
+  if (!dataPoint) {
+    tooltipEl.style.opacity = 0;
+    return;
+  }
+
+  const datasetIndex = dataPoint.datasetIndex;
+  const dataIndex = dataPoint.dataIndex;
+  const datasets = chart.data.datasets || [];
+  const hoveredDataset = datasets[datasetIndex];
+  const hoveredValue = hoveredDataset?.data?.[dataIndex];
+
+  if (hoveredDataset == null || hoveredValue == null) {
+    tooltipEl.style.opacity = 0;
+    return;
+  }
+
+  const comparisons = datasets
+    .map((dataset, idx) => {
+      if (idx === datasetIndex) return null;
+      const otherValue = dataset.data?.[dataIndex];
+      if (!Number.isFinite(otherValue)) return null;
+      const percentDiff = otherValue !== 0 ? ((hoveredValue - otherValue) / otherValue) * 100 : 0;
+      return {
+        label: dataset.label,
+        value: otherValue,
+        percentDiff,
+        color: dataset.borderColor
+      };
+    })
+    .filter(Boolean);
+
+  const averageOther = comparisons.length
+    ? comparisons.reduce((total, entry) => total + entry.value, 0) / comparisons.length
+    : null;
+  const averageDiff = averageOther ? ((hoveredValue - averageOther) / averageOther) * 100 : null;
+
+  tooltipEl.innerHTML = `
+    <div class="chart-hover-title">${hoveredDataset.label}</div>
+    <div class="chart-hover-value">${formatNumber(hoveredValue)}</div>
+    <div class="chart-hover-subtitle">Difference vs other lines</div>
+    <div class="chart-hover-list">
+      ${comparisons.map(entry => `
+        <div class="chart-hover-row">
+          <span class="legend-swatch" style="background:${entry.color}"></span>
+          <span class="chart-hover-name">${entry.label}</span>
+          <span class="chart-hover-diff">${formatDifference(entry.percentDiff)}</span>
+        </div>
+      `).join('')}
+      ${averageDiff !== null ? `
+        <div class="chart-hover-row chart-hover-average">
+          <span class="chart-hover-name">Average vs all</span>
+          <span class="chart-hover-diff">${formatDifference(averageDiff)}</span>
+        </div>
+      ` : ''}
+    </div>
+  `;
+
+  const { left, top } = chart.canvas.getBoundingClientRect();
+  const x = left + window.scrollX + tooltip.caretX + 14;
+  const y = top + window.scrollY + tooltip.caretY - 12;
+
+  tooltipEl.style.opacity = 1;
+  tooltipEl.style.left = `${x}px`;
+  tooltipEl.style.top = `${y}px`;
 }
 
 function renderSummary() {
@@ -676,7 +770,14 @@ function renderChart() {
       datasets
     },
     options: {
-      plugins: { legend: { display: false } },
+      interaction: { mode: 'nearest', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: false,
+          external: renderComparisonTooltip
+        }
+      },
       scales: {
         x: { ticks: { color: '#93a0b5' }, grid: { color: 'rgba(255,255,255,0.04)' } },
         y: {

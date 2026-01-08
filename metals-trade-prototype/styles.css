@@ -529,6 +529,73 @@ input, select {
 .growth-item .growth-name { color: #e8edf7; }
 .growth-item .growth-value { color: var(--muted); }
 
+.chart-hover-tooltip {
+  position: absolute;
+  z-index: 20;
+  min-width: 220px;
+  max-width: 320px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(124, 240, 197, 0.25);
+  background: rgba(10, 14, 22, 0.96);
+  box-shadow: 0 10px 30px rgba(5, 10, 18, 0.45);
+  pointer-events: none;
+  color: #e8edf7;
+  font-size: 12px;
+  line-height: 1.4;
+  transform: translateY(-50%);
+  transition: opacity 0.15s ease;
+}
+
+.chart-hover-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.chart-hover-value {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 2px;
+  margin-bottom: 6px;
+}
+
+.chart-hover-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.chart-hover-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chart-hover-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.chart-hover-name {
+  flex: 1;
+  color: #e8edf7;
+}
+
+.chart-hover-diff {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-hover-average {
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 4px;
+}
+
 .chart-controls {
   display: flex;
   flex-wrap: wrap;
