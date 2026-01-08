@@ -1,4 +1,4 @@
-const currencyRates = { USD: 1, EUR: 0.92, GBP: 0.8, JPY: 156.4 };
+const currencyRates = { USD: 1, EUR: 0.92, GBP: 0.8, JPY: 156.4, SGD: 1.35, AED: 3.67 };
 const markets = [
   {
     id: 'nymx',
@@ -6,6 +6,7 @@ const markets = [
     region: 'Americas',
     status: 'Open',
     timezone: 'ET',
+    currency: 'USD',
     metals: {
       gold: { spot: 2028.4, change: 0.46, high: 2042.3, low: 2014.2, bid: 2027.6, ask: 2029.1 },
       silver: { spot: 24.18, change: -0.12, high: 24.68, low: 23.96, bid: 24.12, ask: 24.23 }
@@ -19,6 +20,7 @@ const markets = [
     region: 'Europe',
     status: 'Open',
     timezone: 'GMT',
+    currency: 'GBP',
     metals: {
       gold: { spot: 2025.9, change: 0.38, high: 2036.8, low: 2018.2, bid: 2025.2, ask: 2026.4 },
       silver: { spot: 24.04, change: 0.05, high: 24.35, low: 23.85, bid: 23.98, ask: 24.12 }
@@ -32,6 +34,7 @@ const markets = [
     region: 'Asia',
     status: 'Pre',
     timezone: 'SGT',
+    currency: 'SGD',
     metals: {
       gold: { spot: 2021.2, change: -0.08, high: 2031.1, low: 2012.5, bid: 2020.4, ask: 2022.1 },
       silver: { spot: 24.26, change: 0.18, high: 24.54, low: 23.99, bid: 24.18, ask: 24.32 }
@@ -45,6 +48,7 @@ const markets = [
     region: 'GCC',
     status: 'Pre',
     timezone: 'GST',
+    currency: 'AED',
     metals: {
       gold: { spot: 2024.1, change: 0.22, high: 2033.5, low: 2017.7, bid: 2023.2, ask: 2024.6 },
       silver: { spot: 23.92, change: -0.04, high: 24.21, low: 23.68, bid: 23.86, ask: 23.98 }
@@ -70,6 +74,13 @@ const marketHistory = {
   }
 };
 
+const fxHistory = {
+  nymx: [1, 1, 1, 1, 1, 1, 1],
+  ldn: [0.79, 0.79, 0.8, 0.81, 0.8, 0.8, 0.8],
+  sgx: [1.34, 1.35, 1.35, 1.36, 1.35, 1.35, 1.35],
+  dgcx: [3.67, 3.67, 3.67, 3.66, 3.67, 3.67, 3.67]
+};
+
 const watchlist = [
   { metal: 'Gold', venue: 'Spot Pool', bid: 2027.7, ask: 2029.0, trend: 0.42 },
   { metal: 'Gold', venue: 'Options Curve', bid: 2024.2, ask: 2026.5, trend: -0.08 },
@@ -82,12 +93,14 @@ let selectedMetal = 'gold';
 let selectedSide = 'buy';
 let trendChart;
 let marketCompareChart;
+const selectedMarketIds = new Set(markets.map(m => m.id));
+const selectedSeries = new Set(['usd', 'local', 'fx']);
 const widthStorageKey = 'marketCardWidths';
 const ribbonWidthStorageKey = 'marketRibbonWidths';
 const marketWidths = {};
 const ribbonWidths = {};
 
-const currencySymbols = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
+const currencySymbols = { USD: '$', EUR: '€', GBP: '£', JPY: '¥', SGD: 'S$', AED: 'د.إ' };
 
 const currencySelect = document.getElementById('currency');
 const marketGridEl = document.getElementById('market-grid');
@@ -104,6 +117,8 @@ const compareLegend = document.getElementById('compare-legend');
 const compareChartLabel = document.getElementById('compare-chart-label');
 const pinnedNote = document.getElementById('pinned-note');
 const heroMarketList = document.getElementById('hero-market-list');
+const marketFiltersEl = document.getElementById('market-filters');
+const seriesFiltersEl = document.getElementById('series-filters');
 const currencyTokens = {
   gold: document.getElementById('gold-currency-token'),
   silver: document.getElementById('silver-currency-token')
@@ -135,6 +150,14 @@ function formatCurrencyValue(value) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: selectedCurrency }).format(value);
 }
 
+function formatCurrencyFor(code, value) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: code }).format(value);
+}
+
+function formatNumber(value, decimals = 2) {
+  return Number(value).toFixed(decimals);
+}
+
 function formatPrice(value) {
   const rate = currencyRates[selectedCurrency] || 1;
   return formatCurrencyValue(value * rate);
@@ -143,6 +166,10 @@ function formatPrice(value) {
 function currencyLabel(code) {
   const symbol = currencySymbols[code] || '';
   return symbol ? `${code} (${symbol})` : code;
+}
+
+function formatFxRate(value) {
+  return Number(value).toFixed(3);
 }
 
 function formatDelta(value) {
@@ -249,13 +276,15 @@ function renderHeroMarketSummary() {
   heroMarketList.innerHTML = '';
 
   markets.forEach(m => {
+    const localRate = currencyRates[m.currency] || 1;
     const chip = document.createElement('div');
     chip.className = 'hero-chip';
     chip.innerHTML = `
       <div class="label">${m.name}<span class="badge">${m.region}</span></div>
       <div class="prices">
-        <span>Gold ${formatPrice(m.metals.gold.ask)}</span>
-        <span>Silver ${formatPrice(m.metals.silver.ask)}</span>
+        <span>Gold USD ${formatCurrencyFor('USD', m.metals.gold.ask)}</span>
+        <span>Local ${currencyLabel(m.currency)} ${formatCurrencyFor(m.currency, m.metals.gold.ask * localRate)}</span>
+        <span>FX ${m.currency}/USD ${formatFxRate(localRate)}</span>
       </div>
     `;
     heroMarketList.appendChild(chip);
@@ -318,7 +347,7 @@ function renderComparisonResults() {
   if (!compareResultsEl) return;
   compareResultsEl.innerHTML = '';
 
-  ['gold', 'silver'].forEach(metal => {
+  ['gold'].forEach(metal => {
     const rank = rankMarkets(metal);
     const card = document.createElement('div');
     card.className = 'compare-card';
@@ -349,10 +378,9 @@ function renderComparisonResults() {
 
 function updatePinnedSummary() {
   if (!pinnedNote) return;
-  pinnedNote.textContent = `Gold (XAU) and Silver (XAG) pinned from search · ${markets.length} markets · Prices in ${currencyLabel(selectedCurrency)}.`;
+  pinnedNote.textContent = `Gold (XAU) pinned from search · ${markets.length} markets · Prices in ${currencyLabel(selectedCurrency)}.`;
   const label = currencyLabel(selectedCurrency);
   if (currencyTokens.gold) currencyTokens.gold.textContent = `Gold tracked in ${label}`;
-  if (currencyTokens.silver) currencyTokens.silver.textContent = `Silver tracked in ${label}`;
   if (compareChartLabel) {
     compareChartLabel.textContent = `Prices shown per venue in ${label}`;
   }
@@ -489,25 +517,41 @@ function renderWatchlist() {
 
 function renderChart() {
   const ctx = document.getElementById('trendChart');
-  const rate = currencyRates[selectedCurrency] || 1;
   const palette = ['#7cf0c5', '#6ea8ff', '#ffd166', '#f08f8f'];
-  const history = marketHistory[selectedMetal];
+  const history = marketHistory.gold;
+  const seriesTypes = [
+    { id: 'usd', label: 'Gold USD', dash: [] },
+    { id: 'local', label: 'Gold Local', dash: [6, 4] },
+    { id: 'fx', label: 'FX rate', dash: [2, 6] }
+  ];
 
   if (trendChart) trendChart.destroy();
 
-  const datasets = Object.entries(history).map(([venueId, series], idx) => {
+  const datasets = Object.entries(history).flatMap(([venueId, series], idx) => {
+    if (!selectedMarketIds.has(venueId)) return [];
     const venue = markets.find(m => m.id === venueId);
     const color = palette[idx % palette.length];
-    return {
-      label: `${venue?.name || venueId} (${venue?.timezone || 'GMT'})`,
-      data: series.map(v => +(v * rate).toFixed(2)),
-      fill: false,
-      tension: 0.35,
-      borderColor: color,
-      backgroundColor: `${color}55`,
-      pointRadius: 3,
-      borderWidth: 2
-    };
+    const localRate = currencyRates[venue?.currency] || 1;
+    return seriesTypes.flatMap(seriesType => {
+      if (!selectedSeries.has(seriesType.id)) return [];
+      const data = seriesType.id === 'usd'
+        ? series
+        : seriesType.id === 'local'
+          ? series.map(v => +(v * localRate).toFixed(2))
+          : (fxHistory[venueId] || []);
+      return [{
+        label: `${venue?.name || venueId} · ${seriesType.label}`,
+        data,
+        fill: false,
+        tension: 0.35,
+        borderColor: color,
+        backgroundColor: `${color}55`,
+        pointRadius: 2,
+        borderWidth: 2,
+        borderDash: seriesType.dash,
+        yAxisID: seriesType.id === 'fx' ? 'y1' : 'y'
+      }];
+    });
   });
 
   trendChart = new Chart(ctx, {
@@ -520,18 +564,91 @@ function renderChart() {
       plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { color: '#93a0b5' }, grid: { color: 'rgba(255,255,255,0.04)' } },
-        y: { ticks: { color: '#93a0b5' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+        y: {
+          ticks: {
+            color: '#93a0b5',
+            callback: value => formatNumber(value)
+          },
+          grid: { color: 'rgba(255,255,255,0.04)' }
+        },
+        y1: {
+          position: 'right',
+          ticks: {
+            color: '#93a0b5',
+            callback: value => formatFxRate(value)
+          },
+          grid: { drawOnChartArea: false }
+        }
       }
     }
   });
 
-  chartLabel.textContent = `${selectedMetal === 'gold' ? 'Gold' : 'Silver'} | ${selectedCurrency} | Venue overlays`;
+  chartLabel.textContent = `Gold | USD, local & FX overlays`;
   chartLegend.innerHTML = '';
   datasets.forEach(ds => {
     const legendItem = document.createElement('div');
     legendItem.className = 'legend-item';
     legendItem.innerHTML = `<span class="legend-swatch" style="background:${ds.borderColor}"></span>${ds.label}`;
     chartLegend.appendChild(legendItem);
+  });
+}
+
+function renderChartFilters() {
+  if (!marketFiltersEl || !seriesFiltersEl) return;
+
+  marketFiltersEl.innerHTML = '';
+  seriesFiltersEl.innerHTML = '';
+
+  const allMarketsSelected = selectedMarketIds.size === markets.length;
+  const allMarketBtn = document.createElement('button');
+  allMarketBtn.className = `filter-chip${allMarketsSelected ? ' active' : ''}`;
+  allMarketBtn.textContent = 'All';
+  allMarketBtn.addEventListener('click', () => {
+    selectedMarketIds.clear();
+    markets.forEach(m => selectedMarketIds.add(m.id));
+    renderChartFilters();
+    renderChart();
+  });
+  marketFiltersEl.appendChild(allMarketBtn);
+
+  markets.forEach(market => {
+    const btn = document.createElement('button');
+    btn.className = `filter-chip${selectedMarketIds.has(market.id) ? ' active' : ''}`;
+    btn.textContent = market.name;
+    btn.addEventListener('click', () => {
+      if (selectedMarketIds.has(market.id) && selectedMarketIds.size === 1) return;
+      if (selectedMarketIds.has(market.id)) {
+        selectedMarketIds.delete(market.id);
+      } else {
+        selectedMarketIds.add(market.id);
+      }
+      renderChartFilters();
+      renderChart();
+    });
+    marketFiltersEl.appendChild(btn);
+  });
+
+  const seriesOptions = [
+    { id: 'usd', label: 'Gold USD' },
+    { id: 'local', label: 'Gold Local' },
+    { id: 'fx', label: 'FX rate' }
+  ];
+
+  seriesOptions.forEach(option => {
+    const btn = document.createElement('button');
+    btn.className = `filter-chip${selectedSeries.has(option.id) ? ' active' : ''}`;
+    btn.textContent = option.label;
+    btn.addEventListener('click', () => {
+      if (selectedSeries.has(option.id) && selectedSeries.size === 1) return;
+      if (selectedSeries.has(option.id)) {
+        selectedSeries.delete(option.id);
+      } else {
+        selectedSeries.add(option.id);
+      }
+      renderChartFilters();
+      renderChart();
+    });
+    seriesFiltersEl.appendChild(btn);
   });
 }
 
@@ -601,6 +718,7 @@ function handleCurrencyChange(e) {
   renderMarkets();
   renderWatchlist();
   renderChart();
+  renderChartFilters();
   renderBestVenues();
   renderMarketRibbon();
   renderMarketComparisonChart();
@@ -702,6 +820,7 @@ function init() {
   renderMarkets();
   renderWatchlist();
   renderChart();
+  renderChartFilters();
   renderBestVenues();
   renderMarketRibbon();
   renderMarketComparisonChart();

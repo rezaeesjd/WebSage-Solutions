@@ -504,6 +504,51 @@ input, select {
 .legend-swatch { width: 12px; height: 12px; border-radius: 4px; }
 .hero-chart canvas { min-height: 360px; }
 
+.chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.filter-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.02);
+  color: var(--muted);
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-chip.active {
+  border-color: rgba(124,240,197,0.6);
+  color: #e8edf7;
+  background: rgba(124,240,197,0.15);
+}
+
 @media (max-width: 900px) {
   body { padding: 16px; }
   .selection-bar { grid-template-columns: 1fr; }
