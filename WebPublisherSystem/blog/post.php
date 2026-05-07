@@ -5,6 +5,7 @@ const WPS_SETTINGS_URL = '../platform/settings.php';
 require_once __DIR__ . '/../platform/content-loader.php';
 
 $settings = wps_load_settings();
+wps_redirect_legacy_blog_path_if_needed($settings);
 $slug = trim($_GET['slug'] ?? '');
 
 $samplePost = [

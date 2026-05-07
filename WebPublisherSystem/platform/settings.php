@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $settings['viator_link'] = trim($_POST['viator_link'] ?? $settings['viator_link']);
 
     if (wps_save_settings($settings)) {
+        wps_ensure_archive_alias($settings);
         $success = 'Settings saved.';
     } else {
         $error = 'Could not save settings. Make sure the platform/data folder is writable.';
