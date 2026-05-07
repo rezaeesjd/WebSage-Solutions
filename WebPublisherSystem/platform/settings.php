@@ -107,15 +107,18 @@ wps_render_header('Settings');
             <textarea name="archive_description" rows="3"><?php echo wps_h($settings['archive_description']); ?></textarea>
         </label>
 
-        <label class="full">
-            Archive slug
-            <div class="url-slug-row">
-                <span class="url-slug-prefix"><?php echo wps_h($archivePrefix); ?></span>
-                <input type="text" name="archive_slug" value="<?php echo wps_h($archiveSlug); ?>" placeholder="blog" pattern="[a-zA-Z0-9_\-/]*">
-                <span class="url-slug-suffix">/</span>
+        <div class="full field-block">
+            <label for="archive_slug">Archive slug</label>
+            <div class="url-control-row">
+                <div class="url-slug-row">
+                    <span class="url-slug-prefix"><?php echo wps_h($archivePrefix); ?></span>
+                    <input id="archive_slug" type="text" name="archive_slug" value="<?php echo wps_h($archiveSlug); ?>" placeholder="blog" pattern="[a-zA-Z0-9_\-/]*">
+                    <span class="url-slug-suffix">/</span>
+                </div>
+                <a class="button-secondary" href="<?php echo wps_h(wps_archive_url()); ?>" target="_blank" rel="noopener">Open Blog Archive</a>
             </div>
             <small>Enter only the slug, for example <code>blog</code>, <code>blogs2</code>, or <code>travel-guides</code>. It will be created inside WebPublisherSystem.</small>
-        </label>
+        </div>
 
         <h3 class="full">Public GitHub source</h3>
 
@@ -159,7 +162,6 @@ wps_render_header('Settings');
         <div class="full actions">
             <button type="submit" name="action" value="save_settings">Save Settings</button>
             <button type="submit" name="action" value="test_connection">Save & Test GitHub Connection</button>
-            <a class="button-secondary" href="<?php echo wps_h(wps_archive_url()); ?>" target="_blank" rel="noopener">Open Blog Archive in New Tab</a>
         </div>
     </form>
 </section>
