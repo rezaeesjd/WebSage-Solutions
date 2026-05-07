@@ -5,7 +5,7 @@ A small standalone PHP system for publishing SEO blog content from a public GitH
 This is not WordPress. It is designed to be uploaded as a normal folder to PHP web hosting.
 
 ## Current scope
-This first version includes:
+This version includes:
 - public archive page shell
 - settings page without password
 - public GitHub repository connection settings
@@ -15,18 +15,51 @@ This first version includes:
 
 No images are included yet.
 
+## Main structure
+```text
+WebPublisherSystem/
+  README.md
+  index.php                  # redirects to platform/index.php
+  settings.php               # redirects to platform/settings.php
+  platform/                  # runnable web app
+    index.php
+    settings.php
+    functions.php
+    github.php
+    assets/
+      style.css
+    data/
+      .gitkeep
+  settings/                  # reserved for future reusable setting definitions
+    .gitkeep
+  publishers/                # reserved for future publisher/sync modules
+    .gitkeep
+  templates/                 # reserved for future page/layout templates
+    .gitkeep
+  structures/                # reserved for future content/data structures
+    .gitkeep
+```
+
 ## Upload folder
-Upload this folder to your web space:
+Upload the full folder to your web space:
 
 ```text
 WebPublisherSystem/
 ```
 
-Then open:
+Then open either:
 
 ```text
 https://your-domain.com/WebPublisherSystem/settings.php
 ```
+
+or directly:
+
+```text
+https://your-domain.com/WebPublisherSystem/platform/settings.php
+```
+
+The top-level `settings.php` redirects to the platform settings page.
 
 ## Default GitHub settings
 The system is prefilled for this public repository:
@@ -38,25 +71,11 @@ Branch: main
 Content path: seo-content-system/tours
 ```
 
-## Files
-```text
-WebPublisherSystem/
-  README.md
-  index.php
-  settings.php
-  functions.php
-  github.php
-  assets/
-    style.css
-  data/
-    .gitkeep
-```
-
 ## Important
-The `data/` folder must be writable by PHP because settings are saved to:
+The `platform/data/` folder must be writable by PHP because settings are saved to:
 
 ```text
-data/settings.json
+platform/data/settings.json
 ```
 
 ## Current limitation
