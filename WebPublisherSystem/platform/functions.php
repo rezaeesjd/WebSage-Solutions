@@ -126,8 +126,13 @@ function wps_archive_url(): string
 function wps_archive_slug_from_setting(array $settings): string
 {
     $archiveUrl = wps_normalize_archive_base_url((string) ($settings['archive_base_url'] ?? ''));
-    if ($archiveUrl === '' || preg_match('#^https?://#i', $archiveUrl)) {
+    if ($archiveUrl === '') {
         return '';
+    }
+
+    if (preg_match('#^https?://#i', $archiveUrl)) {
+        $path = (string) parse_url($archiveUrl, PHP_URL_PATH);
+        return trim($path, '/');
     }
 
     return trim($archiveUrl, '/');
