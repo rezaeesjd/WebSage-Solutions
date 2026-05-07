@@ -8,7 +8,7 @@ $success = '';
 $connection = null;
 
 $archiveSlug = wps_archive_slug_from_setting($settings);
-$archivePrefix = rtrim(wps_current_url_base(), '/') . '/';
+$archivePrefix = rtrim(wps_system_url_base(), '/') . '/';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $settings['archive_description'] = trim($_POST['archive_description'] ?? $settings['archive_description']);
     $rawArchiveSlug = trim((string) ($_POST['archive_slug'] ?? $archiveSlug));
     $cleanArchiveSlug = wps_sanitize_archive_slug($rawArchiveSlug);
-    $settings['archive_base_url'] = $cleanArchiveSlug === '' ? '/blog/' : '/' . $cleanArchiveSlug . '/';
+    $settings['archive_base_url'] = $cleanArchiveSlug === '' ? 'blog' : $cleanArchiveSlug;
     $settings['github_owner'] = trim($_POST['github_owner'] ?? $settings['github_owner']);
     $settings['github_repo'] = trim($_POST['github_repo'] ?? $settings['github_repo']);
     $settings['github_branch'] = trim($_POST['github_branch'] ?? $settings['github_branch']);
@@ -40,8 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $settings = wps_load_settings();
     $archiveSlug = wps_archive_slug_from_setting($settings);
+    $archivePrefix = rtrim(wps_system_url_base(), '/') . '/';
 }
-
 
 wps_render_header('Settings');
 ?>
@@ -114,7 +114,7 @@ wps_render_header('Settings');
                 <input type="text" name="archive_slug" value="<?php echo wps_h($archiveSlug); ?>" placeholder="blog" pattern="[a-zA-Z0-9_\-/]*">
                 <span class="url-slug-suffix">/</span>
             </div>
-            <small>Enter only the slug (example: <code>blog</code> or <code>travel-guides</code>). Do not add / before it.</small>
+            <small>Enter only the slug, for example <code>blog</code>, <code>blogs2</code>, or <code>travel-guides</code>. It will be created inside WebPublisherSystem.</small>
         </label>
 
         <h3 class="full">Public GitHub source</h3>
