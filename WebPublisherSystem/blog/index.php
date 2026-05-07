@@ -3,11 +3,10 @@ const WPS_ASSET_BASE = '../platform';
 const WPS_ARCHIVE_URL = '../blog/';
 const WPS_SETTINGS_URL = '../platform/settings.php';
 
-require_once __DIR__ . '/../platform/functions.php';
-require_once __DIR__ . '/../platform/github.php';
+require_once __DIR__ . '/../platform/content-loader.php';
 
 $settings = wps_load_settings();
-$connection = wps_test_github_connection($settings);
+$postsResult = wps_get_posts($settings);
 
 wps_render_header($settings['archive_title']);
 ?>
@@ -19,62 +18,41 @@ wps_render_header($settings['archive_title']);
 </section>
 
 <section class="panel">
-    <h2>Archive setup status</h2>
-    <p>This blog archive is installed at the default public path: <code>/WebPublisherSystem/blog/</code>.</p>
+    <h2>Latest Travel Guides</h2>
 
-    <div class="status-grid">
-        <div class="status-card">
-            <strong>Archive URL</strong>
-            <span><?php echo wps_h($settings['archive_base_url'] ?: wps_current_url_base()); ?></span>
-        </div>
-        <div class="status-card">
-            <strong>GitHub source</strong>
-            <span><?php echo wps_h($settings['github_owner'] . '/' . $settings['github_repo']); ?></span>
-        </div>
-        <div class="status-card">
-            <strong>Content path</strong>
-            <span><?php echo wps_h($settings['github_content_path']); ?></span>
-        </div>
-    </div>
-
-    <?php if ($connection['ok']): ?>
-        <div class="alert alert-success">
-            <?php echo wps_h($connection['message']); ?>
-        </div>
-    <?php else: ?>
+    <?php if (!$postsResult['ok']): ?>
         <div class="alert alert-error">
-            <?php echo wps_h($connection['message']); ?>
+            <?php echo wps_h($postsResult['error']); ?>
             <br><a href="../platform/settings.php">Check settings</a>
         </div>
-    <?php endif; ?>
-</section>
-
-<section class="panel">
-    <h2>Detected content folders</h2>
-
-    <?php if (!$connection['ok']): ?>
-        <p>Content folders cannot be loaded until the GitHub connection works.</p>
-    <?php elseif (empty($connection['items'])): ?>
-        <p>No folders found in the configured GitHub content path yet.</p>
+    <?php elseif (empty($postsResult['posts'])): ?>
+        <p>No blog posts are available yet. Add generated tour content under the configured GitHub content path, then refresh this page.</p>
     <?php else: ?>
         <div class="post-grid">
-            <?php foreach ($connection['items'] as $item): ?>
-                <?php if (($item['type'] ?? '') !== 'dir') { continue; } ?>
+            <?php foreach ($postsResult['posts'] as $post): ?>
                 <article class="post-card">
-                    <p class="post-label">GitHub folder</p>
-                    <h3><?php echo wps_h(ucwords(str_replace('-', ' ', $item['name']))); ?></h3>
-                    <p class="muted"><?php echo wps_h($item['path']); ?></p>
-                    <span class="read-more">Publishing view will be added in the next phase →</span>
+                    <p class="post-label"><?php echo wps_h($post['primary_keyword'] ?: 'Travel guide'); ?></p>
+                    <h3>
+                        <a href="post.php?slug=<?php echo urlencode($post['slug']); ?>">
+                            <?php echo wps_h($post['title']); ?>
+                        </a>
+                    </h3>
+                    <?php if (!empty($post['meta_description'])): ?>
+                        <p><?php echo wps_h($post['meta_description']); ?></p>
+                    <?php endif; ?>
+                    <div class="post-meta">
+                        <?php if (!empty($post['funnel_stage'])): ?>
+                            <span><?php echo wps_h($post['funnel_stage']); ?></span>
+                        <?php endif; ?>
+                        <?php if (!empty($post['product_reference_code'])): ?>
+                            <span>Ref <?php echo wps_h($post['product_reference_code']); ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <a class="read-more" href="post.php?slug=<?php echo urlencode($post['slug']); ?>">Read guide →</a>
                 </article>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
-</section>
-
-<section class="panel muted-panel">
-    <h2>Next phase</h2>
-    <p>The next step is adding a sync/publish feature that reads each folder's <code>meta.json</code>, <code>blog-post.md</code>, and <code>faq.md</code>, then creates public blog pages from them.</p>
-    <a class="button-secondary" href="../platform/settings.php">Open Settings</a>
 </section>
 
 <?php wps_render_footer(); ?>
