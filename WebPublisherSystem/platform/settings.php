@@ -7,13 +7,18 @@ $error = '';
 $success = '';
 $connection = null;
 
+$archiveSlug = wps_archive_slug_from_setting($settings);
+$archivePrefix = rtrim(wps_current_url_base(), '/') . '/';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     $settings['site_name'] = trim($_POST['site_name'] ?? $settings['site_name']);
     $settings['archive_title'] = trim($_POST['archive_title'] ?? $settings['archive_title']);
     $settings['archive_description'] = trim($_POST['archive_description'] ?? $settings['archive_description']);
-    $settings['archive_base_url'] = trim($_POST['archive_base_url'] ?? $settings['archive_base_url']);
+    $rawArchiveSlug = trim((string) ($_POST['archive_slug'] ?? $archiveSlug));
+    $cleanArchiveSlug = wps_sanitize_archive_slug($rawArchiveSlug);
+    $settings['archive_base_url'] = $cleanArchiveSlug === '' ? '/blog/' : '/' . $cleanArchiveSlug . '/';
     $settings['github_owner'] = trim($_POST['github_owner'] ?? $settings['github_owner']);
     $settings['github_repo'] = trim($_POST['github_repo'] ?? $settings['github_repo']);
     $settings['github_branch'] = trim($_POST['github_branch'] ?? $settings['github_branch']);
@@ -34,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $settings = wps_load_settings();
+    $archiveSlug = wps_archive_slug_from_setting($settings);
 }
 
 
@@ -102,9 +108,13 @@ wps_render_header('Settings');
         </label>
 
         <label class="full">
-            Archive public URL or folder URL
-            <input type="text" name="archive_base_url" value="<?php echo wps_h($settings['archive_base_url']); ?>" placeholder="https://www.example.com/blog/">
-            <small>This is the public URL where you upload this folder, for example https://www.milano-adventures.com/blog/.</small>
+            Archive slug
+            <div class="url-slug-row">
+                <span class="url-slug-prefix"><?php echo wps_h($archivePrefix); ?></span>
+                <input type="text" name="archive_slug" value="<?php echo wps_h($archiveSlug); ?>" placeholder="blog" pattern="[a-zA-Z0-9_\-/]*">
+                <span class="url-slug-suffix">/</span>
+            </div>
+            <small>Enter only the slug (example: <code>blog</code> or <code>travel-guides</code>). Do not add / before it.</small>
         </label>
 
         <h3 class="full">Public GitHub source</h3>
@@ -149,7 +159,7 @@ wps_render_header('Settings');
         <div class="full actions">
             <button type="submit" name="action" value="save_settings">Save Settings</button>
             <button type="submit" name="action" value="test_connection">Save & Test GitHub Connection</button>
-            <a class="button-secondary" href="<?php echo wps_h(wps_archive_url()); ?>">View Blog Archive</a>
+            <a class="button-secondary" href="<?php echo wps_h(wps_archive_url()); ?>" target="_blank" rel="noopener">Open Blog Archive in New Tab</a>
         </div>
     </form>
 </section>

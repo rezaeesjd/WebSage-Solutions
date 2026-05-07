@@ -103,6 +103,32 @@ input, textarea {
 }
 small { color: var(--muted); font-weight: 400; }
 
+.url-slug-row {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.url-slug-prefix,
+.url-slug-suffix {
+    background: #f3f6fb;
+    color: var(--muted);
+    padding: 12px 10px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.url-slug-row input {
+    border: none;
+    border-radius: 0;
+}
+
+.url-slug-row input:focus {
+    outline: none;
+}
 button, .button-secondary {
     display: inline-flex;
     align-items: center;
