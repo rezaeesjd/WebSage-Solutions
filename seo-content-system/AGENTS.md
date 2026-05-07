@@ -5,6 +5,23 @@ This repository section is used to generate SEO and conversion-focused content f
 
 The main business goal is to increase direct bookings on the website while still benefiting from OTA visibility on Viator and TripAdvisor.
 
+## Brand context
+The brand name is **Milano Adventures**.
+
+When generating content:
+- write in a friendly, clear, travel-focused brand voice
+- prioritize trust, ease, and memorable local experiences
+- keep the tone practical and persuasive rather than luxury-heavy or overly formal
+- use the brand name naturally only where it helps trust or conversion
+
+## Booking link placeholders
+Use these placeholders when a booking link is needed in generated content:
+- Website booking page: `{{WebsiteLink}}`
+- TripAdvisor booking page: `{{TripAdvisorLink}}`
+- Viator booking page: `{{ViatorLink}}`
+
+Prefer the website link as the main CTA. TripAdvisor and Viator links may be used only as secondary trust or alternate booking references when appropriate.
+
 ## Primary objective
 For each tour title provided by the user, create a dedicated folder and generate structured SEO content assets that are ready for reuse in a CMS.
 
@@ -31,7 +48,7 @@ Folder name format:
 - no special characters except hyphens
 
 Example:
-`Chianti Wine Tour from Florence` → `/seo-content-system/tours/chianti-wine-tour-from-florence/`
+`Cinque Terre Full-Day Tour from Milan` → `/seo-content-system/tours/cinque-terre-full-day-tour-from-milan/`
 
 ## Required files inside each tour folder
 1. `brief.md`
