@@ -10,7 +10,7 @@
 - guided cinque terre tour from milan
 - cinque terre small group tour from milan
 - riomaggiore manarola monterosso tour from milan
-- cin cinqe terre bus and train tour from milan
+- cinque terre bus and train tour from milan
 - best cinque terre tour from milan
 - day trip to cinque terre from milan with guide
 - cinque terre national park tour from milan
