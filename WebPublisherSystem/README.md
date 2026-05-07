@@ -6,7 +6,7 @@ This is not WordPress. It is designed to be uploaded as a normal folder to PHP w
 
 ## Current scope
 This version includes:
-- public archive page shell
+- public blog archive page shell at `/WebPublisherSystem/blog/`
 - settings page without password
 - public GitHub repository connection settings
 - GitHub connection test
@@ -19,9 +19,11 @@ No images are included yet.
 ```text
 WebPublisherSystem/
   README.md
-  index.php                  # redirects to platform/index.php
+  index.php                  # redirects to blog/
   settings.php               # redirects to platform/settings.php
-  platform/                  # runnable web app
+  blog/                      # default public blog archive
+    index.php
+  platform/                  # runnable platform/admin/support files
     index.php
     settings.php
     functions.php
@@ -30,6 +32,17 @@ WebPublisherSystem/
       style.css
     data/
       .gitkeep
+  content-system/            # AI/Codex content instructions and generated tour content
+    AGENTS.md
+    tours/
+      cinque-terre-full-day-tour-from-milan/
+        brief.md
+        keywords.md
+        blog-post.md
+        faq.md
+        meta.json
+        internal-links.md
+        automation-notes.md
   settings/                  # reserved for future reusable setting definitions
     .gitkeep
   publishers/                # reserved for future publisher/sync modules
@@ -47,19 +60,19 @@ Upload the full folder to your web space:
 WebPublisherSystem/
 ```
 
-Then open either:
+Then open the public blog archive:
+
+```text
+https://your-domain.com/WebPublisherSystem/blog/
+```
+
+Or open the settings page:
 
 ```text
 https://your-domain.com/WebPublisherSystem/settings.php
 ```
 
-or directly:
-
-```text
-https://your-domain.com/WebPublisherSystem/platform/settings.php
-```
-
-The top-level `settings.php` redirects to the platform settings page.
+The top-level `index.php` redirects to the blog archive. The top-level `settings.php` redirects to the platform settings page.
 
 ## Default GitHub settings
 The system is prefilled for this public repository:
@@ -68,7 +81,7 @@ The system is prefilled for this public repository:
 Owner: rezaeesjd
 Repo: WebSage-Solutions
 Branch: main
-Content path: seo-content-system/tours
+Content path: WebPublisherSystem/content-system/tours
 ```
 
 ## Important
