@@ -20,7 +20,7 @@ function wps_default_settings(): array
         'site_name' => 'Milano Adventures',
         'archive_title' => 'Travel Guides & Tour Ideas',
         'archive_description' => 'Helpful travel guides, tour ideas, and booking-focused articles from Milano Adventures.',
-        'archive_base_url' => '',
+        'archive_base_url' => 'blog',
         'github_owner' => 'rezaeesjd',
         'github_repo' => 'WebSage-Solutions',
         'github_branch' => 'main',
@@ -66,13 +66,40 @@ function wps_h(?string $value): string
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-function wps_current_url_base(): string
+function wps_url_origin(): string
 {
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'] ?? '';
-    $scriptDir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
+    return $scheme . '://' . $host;
+}
 
-    return $scheme . '://' . $host . ($scriptDir ? $scriptDir : '');
+function wps_current_url_base(): string
+{
+    $scriptDir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
+    return wps_url_origin() . ($scriptDir ? $scriptDir : '');
+}
+
+function wps_system_url_base(): string
+{
+    $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $origin = wps_url_origin();
+
+    // Preferred when the package is uploaded as /WebPublisherSystem/.
+    $marker = '/WebPublisherSystem/';
+    $pos = strpos($scriptName, $marker);
+    if ($pos !== false) {
+        return $origin . substr($scriptName, 0, $pos + strlen('/WebPublisherSystem'));
+    }
+
+    // Fallback for renamed installs: remove the current app subfolder from URL path.
+    $dir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+    $segments = array_values(array_filter(explode('/', trim($dir, '/')), fn($part) => $part !== ''));
+    $last = end($segments);
+    if (in_array($last, ['platform', 'blog', 'blogs'], true)) {
+        array_pop($segments);
+    }
+
+    return $origin . ($segments ? '/' . implode('/', $segments) : '');
 }
 
 function wps_asset_url(string $path): string
@@ -85,57 +112,6 @@ function wps_asset_url(string $path): string
     }
 
     return rtrim($base, '/') . '/' . $cleanPath;
-}
-
-function wps_normalize_archive_base_url(string $value): string
-{
-    $trimmed = trim($value);
-    if ($trimmed === '') {
-        return '';
-    }
-
-    if (preg_match('#^https?://#i', $trimmed)) {
-        return rtrim($trimmed, '/') . '/';
-    }
-
-    $path = '/' . trim($trimmed, '/');
-    if ($path === '/') {
-        return '/';
-    }
-
-    return $path . '/';
-}
-
-function wps_archive_url(): string
-{
-    if (defined('WPS_ARCHIVE_URL')) {
-        return WPS_ARCHIVE_URL;
-    }
-
-    $settings = wps_load_settings();
-    $archiveUrl = wps_normalize_archive_base_url((string) ($settings['archive_base_url'] ?? ''));
-
-    if ($archiveUrl !== '') {
-        return $archiveUrl;
-    }
-
-    return '/blog/';
-}
-
-
-function wps_archive_slug_from_setting(array $settings): string
-{
-    $archiveUrl = wps_normalize_archive_base_url((string) ($settings['archive_base_url'] ?? ''));
-    if ($archiveUrl === '') {
-        return '';
-    }
-
-    if (preg_match('#^https?://#i', $archiveUrl)) {
-        $path = (string) parse_url($archiveUrl, PHP_URL_PATH);
-        return trim($path, '/');
-    }
-
-    return trim($archiveUrl, '/');
 }
 
 function wps_sanitize_archive_slug(string $slug): string
@@ -158,6 +134,45 @@ function wps_sanitize_archive_slug(string $slug): string
     return implode('/', $safe);
 }
 
+function wps_archive_slug_from_setting(array $settings): string
+{
+    $value = trim((string) ($settings['archive_base_url'] ?? ''));
+    if ($value === '') {
+        return 'blog';
+    }
+
+    if (preg_match('#^https?://#i', $value)) {
+        $path = (string) parse_url($value, PHP_URL_PATH);
+    } else {
+        $path = $value;
+    }
+
+    $path = trim($path, '/');
+
+    // If user pasted /WebPublisherSystem/blogs2/, keep only the part inside WebPublisherSystem.
+    $parts = array_values(array_filter(explode('/', $path), fn($part) => $part !== ''));
+    $systemIndex = array_search('WebPublisherSystem', $parts, true);
+    if ($systemIndex !== false) {
+        $parts = array_slice($parts, $systemIndex + 1);
+        $path = implode('/', $parts);
+    }
+
+    $slug = wps_sanitize_archive_slug($path);
+    return $slug !== '' ? $slug : 'blog';
+}
+
+function wps_archive_url(): string
+{
+    if (defined('WPS_ARCHIVE_URL')) {
+        return WPS_ARCHIVE_URL;
+    }
+
+    $settings = wps_load_settings();
+    $slug = wps_archive_slug_from_setting($settings);
+
+    return rtrim(wps_system_url_base(), '/') . '/' . trim($slug, '/') . '/';
+}
+
 function wps_ensure_archive_alias(array $settings): void
 {
     $slug = wps_sanitize_archive_slug(wps_archive_slug_from_setting($settings));
@@ -167,31 +182,23 @@ function wps_ensure_archive_alias(array $settings): void
     }
 
     $aliasDir = $root . '/' . $slug;
-    $aliasRealParent = realpath(dirname($aliasDir));
-    if ($aliasRealParent !== false) {
-        $rootPrefix = rtrim(str_replace('\\', '/', $root), '/') . '/';
-        $parentPrefix = rtrim(str_replace('\\', '/', $aliasRealParent), '/') . '/';
-        if (!str_starts_with($parentPrefix, $rootPrefix)) {
-            return;
-        }
+    if (!is_dir($aliasDir) && !mkdir($aliasDir, 0755, true) && !is_dir($aliasDir)) {
+        return;
     }
 
-    if (!is_dir($aliasDir)) {
-        mkdir($aliasDir, 0755, true);
+    $realAliasDir = realpath($aliasDir);
+    $rootPrefix = rtrim(str_replace('\\', '/', $root), '/') . '/';
+    $aliasPrefix = $realAliasDir ? rtrim(str_replace('\\', '/', $realAliasDir), '/') . '/' : '';
+    if ($aliasPrefix === '' || !str_starts_with($aliasPrefix, $rootPrefix)) {
+        return;
     }
 
-    $marker = $aliasDir . '/.wps-archive-alias';
-    $indexFile = $aliasDir . '/index.php';
-    $postFile = $aliasDir . '/post.php';
+    $depth = count(array_filter(explode('/', trim($slug, '/')), fn($part) => $part !== ''));
+    $up = str_repeat('../', max(1, $depth));
 
-    file_put_contents($marker, "managed-by=WebPublisherSystem
-");
-    file_put_contents($indexFile, "<?php
-require_once __DIR__ . '/../blog/index.php';
-");
-    file_put_contents($postFile, "<?php
-require_once __DIR__ . '/../blog/post.php';
-");
+    file_put_contents($aliasDir . '/.wps-archive-alias', "managed-by=WebPublisherSystem\n");
+    file_put_contents($aliasDir . '/index.php', "<?php\nrequire_once __DIR__ . '/" . $up . "blog/index.php';\n");
+    file_put_contents($aliasDir . '/post.php', "<?php\nrequire_once __DIR__ . '/" . $up . "blog/post.php';\n");
 }
 
 function wps_redirect_legacy_blog_path_if_needed(array $settings): void
@@ -209,7 +216,7 @@ function wps_redirect_legacy_blog_path_if_needed(array $settings): void
 
     $scriptSegments = explode('/', $scriptDir);
     $currentArchivePath = end($scriptSegments);
-    if ($currentArchivePath === $slug) {
+    if ($currentArchivePath === basename($slug)) {
         return;
     }
 
@@ -263,7 +270,7 @@ function wps_render_footer(): void
     </main>
     <footer class="site-footer">
         <div class="container">
-            <p>WebPublisherSystem. Public GitHub connection enabled. Publishing/sync will be expanded in the next phase.</p>
+            <p>WebPublisherSystem. Local blog publishing enabled. Use System Sync only when you want to update files from GitHub.</p>
         </div>
     </footer>
     </body>
