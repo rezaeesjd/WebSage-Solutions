@@ -1,83 +1,7 @@
 <?php
 require_once __DIR__ . '/functions.php';
-require_once __DIR__ . '/github.php';
 
-function wps_fetch_github_file_text(array $settings, string $path): array
-{
-    $url = wps_github_api_url($settings, $path);
-    $response = wps_github_fetch_json($url);
-
-    if (!$response['ok']) {
-        return ['ok' => false, 'content' => '', 'error' => $response['error']];
-    }
-
-    $data = $response['data'];
-    if (!is_array($data) || empty($data['type']) || $data['type'] !== 'file') {
-        return ['ok' => false, 'content' => '', 'error' => 'GitHub item is not a file.'];
-    }
-
-    if (!empty($data['content']) && ($data['encoding'] ?? '') === 'base64') {
-        $decoded = base64_decode(str_replace("\n", '', $data['content']), true);
-        if ($decoded === false) {
-            return ['ok' => false, 'content' => '', 'error' => 'Could not decode GitHub file content.'];
-        }
-        return ['ok' => true, 'content' => $decoded, 'error' => ''];
-    }
-
-    if (!empty($data['download_url'])) {
-        $raw = wps_github_fetch_raw($data['download_url']);
-        return $raw;
-    }
-
-    return ['ok' => false, 'content' => '', 'error' => 'No readable content returned by GitHub.'];
-}
-
-function wps_github_fetch_raw(string $url): array
-{
-    $headers = [
-        'User-Agent: WebPublisherSystem',
-        'Accept: text/plain',
-    ];
-
-    if (function_exists('curl_init')) {
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_TIMEOUT => 20,
-            CURLOPT_FOLLOWLOCATION => true,
-        ]);
-        $body = curl_exec($ch);
-        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
-
-        if ($body === false || $error) {
-            return ['ok' => false, 'content' => '', 'error' => $error ?: 'Raw download failed.'];
-        }
-
-        if ($httpCode < 200 || $httpCode >= 300) {
-            return ['ok' => false, 'content' => '', 'error' => 'Raw download returned HTTP ' . $httpCode];
-        }
-
-        return ['ok' => true, 'content' => $body, 'error' => ''];
-    }
-
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'GET',
-            'header' => implode("\r\n", $headers),
-            'timeout' => 20,
-        ],
-    ]);
-
-    $body = @file_get_contents($url, false, $context);
-    if ($body === false) {
-        return ['ok' => false, 'content' => '', 'error' => 'Raw download failed.'];
-    }
-
-    return ['ok' => true, 'content' => $body, 'error' => ''];
-}
+const WPS_LOCAL_CONTENT_DIR = __DIR__ . '/../content-system/tours';
 
 function wps_replace_placeholders(string $content, array $settings): string
 {
@@ -90,19 +14,63 @@ function wps_replace_placeholders(string $content, array $settings): string
 
 function wps_get_content_folders(array $settings): array
 {
-    $connection = wps_test_github_connection($settings);
-    if (!$connection['ok']) {
-        return ['ok' => false, 'error' => $connection['message'], 'folders' => []];
+    $baseDir = realpath(WPS_LOCAL_CONTENT_DIR);
+
+    if ($baseDir === false || !is_dir($baseDir)) {
+        return [
+            'ok' => false,
+            'error' => 'Local content folder not found: WebPublisherSystem/content-system/tours. Upload or sync the content-system folder first.',
+            'folders' => [],
+        ];
     }
 
     $folders = [];
-    foreach ($connection['items'] as $item) {
-        if (($item['type'] ?? '') === 'dir') {
-            $folders[] = $item;
+    $items = scandir($baseDir);
+
+    if ($items === false) {
+        return ['ok' => false, 'error' => 'Could not read local content folder.', 'folders' => []];
+    }
+
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') {
+            continue;
         }
+
+        $fullPath = $baseDir . '/' . $item;
+        if (!is_dir($fullPath)) {
+            continue;
+        }
+
+        $folders[] = [
+            'name' => $item,
+            'path' => $fullPath,
+            'relative_path' => 'content-system/tours/' . $item,
+            'type' => 'dir',
+        ];
     }
 
     return ['ok' => true, 'error' => '', 'folders' => $folders];
+}
+
+function wps_read_local_file(string $path): array
+{
+    $baseDir = realpath(WPS_LOCAL_CONTENT_DIR);
+    $realPath = realpath($path);
+
+    if ($baseDir === false || $realPath === false || !str_starts_with($realPath, $baseDir)) {
+        return ['ok' => false, 'content' => '', 'error' => 'Unsafe or missing local file path.'];
+    }
+
+    if (!is_file($realPath)) {
+        return ['ok' => false, 'content' => '', 'error' => 'Local file not found.'];
+    }
+
+    $content = file_get_contents($realPath);
+    if ($content === false) {
+        return ['ok' => false, 'content' => '', 'error' => 'Could not read local file.'];
+    }
+
+    return ['ok' => true, 'content' => $content, 'error' => ''];
 }
 
 function wps_get_posts(array $settings): array
@@ -122,7 +90,7 @@ function wps_get_posts(array $settings): array
             continue;
         }
 
-        $metaFile = wps_fetch_github_file_text($settings, $folderPath . '/meta.json');
+        $metaFile = wps_read_local_file($folderPath . '/meta.json');
         if (!$metaFile['ok']) {
             continue;
         }
@@ -175,8 +143,8 @@ function wps_get_post_content(array $settings, array $post): array
         return ['ok' => false, 'error' => 'Missing post folder path.', 'blog' => '', 'faq' => ''];
     }
 
-    $blog = wps_fetch_github_file_text($settings, $folderPath . '/blog-post.md');
-    $faq = wps_fetch_github_file_text($settings, $folderPath . '/faq.md');
+    $blog = wps_read_local_file($folderPath . '/blog-post.md');
+    $faq = wps_read_local_file($folderPath . '/faq.md');
 
     if (!$blog['ok']) {
         return ['ok' => false, 'error' => $blog['error'], 'blog' => '', 'faq' => ''];
