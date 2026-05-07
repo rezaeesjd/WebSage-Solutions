@@ -77,6 +77,7 @@ main.container { padding-top: 28px; padding-bottom: 40px; }
 }
 
 .muted { color: var(--muted); }
+.lead { color: var(--muted); font-size: 18px; }
 
 .alert {
     padding: 14px 16px;
@@ -133,8 +134,37 @@ button:hover { background: var(--brand-dark); }
 .status-card strong, .status-card span { display: block; }
 .status-card span { color: var(--muted); margin-top: 8px; overflow-wrap: anywhere; }
 .post-card h3 { margin-top: 0; }
+.post-card h3 a { color: var(--text); }
+.post-card h3 a:hover { color: var(--brand); }
 .read-more { color: var(--brand); font-weight: 700; }
 .muted-panel { background: #fbfcff; }
+
+.post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 18px;
+}
+.post-meta span {
+    background: #eef3f8;
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.blog-post, .blog-faq { max-width: 860px; }
+.content-body h1:first-child,
+.content-body h2:first-child,
+.content-body h3:first-child { margin-top: 0; }
+.content-body h1 { font-size: 32px; line-height: 1.2; }
+.content-body h2 { font-size: 25px; margin-top: 34px; }
+.content-body h3 { font-size: 20px; margin-top: 26px; }
+.content-body p { margin: 0 0 16px; }
+.content-body ul { margin: 0 0 18px 22px; padding: 0; }
+.content-body li { margin-bottom: 8px; }
+.content-body a { font-weight: 700; }
 
 .site-footer {
     border-top: 1px solid var(--border);
@@ -146,4 +176,5 @@ button:hover { background: var(--brand-dark); }
     .header-inner, .actions { align-items: flex-start; flex-direction: column; }
     .grid-form, .post-grid, .status-grid { grid-template-columns: 1fr; }
     .hero h1, .panel h1 { font-size: 28px; }
+    .content-body h1 { font-size: 27px; }
 }
