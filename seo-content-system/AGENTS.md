@@ -5,6 +5,8 @@ This repository section is used to generate SEO and conversion-focused content f
 
 The main business goal is to increase direct bookings on the website while still benefiting from OTA visibility on Viator and TripAdvisor.
 
+The purpose of each post is to move the traveler one step closer to booking. Do not create content only to fill a blog.
+
 ## Brand context
 The brand name is **Milano Adventures**.
 
@@ -127,6 +129,13 @@ For each tour request generate:
 - 1 page title
 - 1 meta description
 
+## Title rules
+- Put the primary keyword near the beginning of the title when natural.
+- Add a clear benefit or conversion angle, such as easy, guided, full-day, stress-free, scenic, private, small-group, or direct booking.
+- Avoid very long titles.
+- Avoid overusing words like "best", "top-rated", or "number one" unless the user provides proof.
+- Do not make exaggerated or unverifiable claims.
+
 ## Title variation rules
 Include title variations across multiple angles when possible:
 - direct booking angle
@@ -200,6 +209,16 @@ Provide exact link targets by page type, such as:
 - comparison article
 - FAQ or booking/contact page
 
+## Conversion checklist
+Every generated `blog-post.md` must include:
+- one direct website CTA in the first half of the post or immediately after the main value section
+- one strong website CTA near the end
+- booking confidence details from the product input, such as duration, meeting point, group type, included items, excluded items, languages, or accessibility notes
+- a clear "who this tour is best for" or equivalent section
+- a clear "what to know before booking" or equivalent section
+- direct booking as the preferred action using `{{WebsiteLink}}`
+- TripAdvisor and Viator only as secondary trust or alternate booking references when useful
+
 ## Writing rules
 - Write for real travelers, not search engines.
 - Keep the tone friendly, persuasive, clear, and natural.
@@ -208,6 +227,7 @@ Provide exact link targets by page type, such as:
 - Focus on practical decision-making and booking confidence.
 - Keep paragraphs relatively short and easy to scan.
 - Favor clarity and usefulness over content length.
+- Do not create content simply to publish something. Each section should help the traveler understand, compare, trust, or book the tour.
 
 ## Trust and OTA positioning
 - Encourage direct booking on the website first.
@@ -225,12 +245,38 @@ Each content asset should suggest links to:
 Preferred flow:
 `informational post -> comparison post -> tour page -> booking`
 
+### Internal URL safety
+- Do not invent final internal URLs unless the user provided them.
+- If the real internal URL is unknown, use a clear placeholder such as `{{MilanDayTripsHubLink}}`, `{{RelatedGuideLink}}`, `{{ComparisonPostLink}}`, or `{{ContactPageLink}}`.
+- If suggesting a page that does not exist yet, label it as a "Suggested future page".
+- The main booking link should use `{{WebsiteLink}}` unless the user provides a final URL.
+
 ## Content safety rules
 - Do not invent facts.
 - Do not invent pricing, durations, inclusions, departure times, meeting points, or review counts.
 - If required business details are missing, use clearly labeled placeholders.
 - Do not make unverifiable claims such as "best in the city" unless supported by provided evidence.
 - Do not fabricate review quotes, rankings, awards, or customer numbers.
+
+## Source-facts-only rules for tours
+Only mention the following details if they are provided in the product input or by the user:
+- exact itinerary stops
+- tour duration
+- meeting point or pickup rules
+- end point
+- included items
+- excluded items
+- group size or private/shared status
+- languages
+- accessibility notes
+- health restrictions
+- weather or seasonal limitations
+- guide/driver details
+- booking links
+
+If a detail is missing, do not guess it. Use a placeholder or omit it.
+
+When the product input contains both a broad marketing description and a more specific structured itinerary, follow the structured itinerary for exact claims.
 
 ## File-specific output rules
 ### `brief.md`
@@ -258,15 +304,25 @@ Must include practical pre-booking questions and answers that help reduce hesita
 
 ### `meta.json`
 Must include structured fields for:
+- brand
+- product_reference_code
+- canonical_tour_title
 - page_title
 - slug
 - meta_description
 - primary_keyword
 - funnel_stage
 - cta_primary
+- website_link
+- tripadvisor_link
+- viator_link
+- publish_status
+- human_review_required
+
+Use `"publish_status": "draft"` and `"human_review_required": true` unless the user explicitly says otherwise.
 
 ### `internal-links.md`
-Must suggest internal links by page type and explain why each suggested link matters.
+Must suggest internal links by page type and explain why each suggested link matters. Use placeholders or "Suggested future page" labels when final URLs are not provided.
 
 ### `automation-notes.md`
 Must explain:
@@ -308,4 +364,6 @@ A generation task is complete only when:
 - filenames follow the naming convention
 - content follows the five-step workflow in this file
 - the post supports direct booking as the primary goal
+- the conversion checklist is satisfied
+- final internal URLs are not invented; unknown URLs use placeholders or are labeled as suggested future pages
 - the content is ready to paste into the CMS with minimal editing
