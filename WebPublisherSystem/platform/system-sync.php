@@ -150,7 +150,15 @@ function wps_sync_path(array $settings, string $repoPath, string $localRoot, arr
             $realTargetDir = realpath($targetDir);
         }
 
-        if ($realLocalRoot === false || $realTargetDir === false || !str_starts_with($realTargetDir, $realLocalRoot)) {
+        if ($realLocalRoot === false || $realTargetDir === false) {
+            $results[] = ['status' => 'error', 'path' => $path, 'message' => 'Unsafe local path blocked.'];
+            continue;
+        }
+
+        $rootPrefix = rtrim(str_replace('\\', '/', $realLocalRoot), '/') . '/';
+        $targetPrefix = rtrim(str_replace('\\', '/', $realTargetDir), '/') . '/';
+
+        if (!str_starts_with($targetPrefix, $rootPrefix)) {
             $results[] = ['status' => 'error', 'path' => $path, 'message' => 'Unsafe local path blocked.'];
             continue;
         }

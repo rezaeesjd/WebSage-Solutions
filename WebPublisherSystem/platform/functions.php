@@ -77,8 +77,14 @@ function wps_current_url_base(): string
 
 function wps_asset_url(string $path): string
 {
-    $base = defined('WPS_ASSET_BASE') ? WPS_ASSET_BASE : '';
-    return rtrim($base, '/') . '/' . ltrim($path, '/');
+    $base = defined('WPS_ASSET_BASE') ? trim((string) WPS_ASSET_BASE) : '';
+    $cleanPath = ltrim($path, '/');
+
+    if ($base === '') {
+        return $cleanPath;
+    }
+
+    return rtrim($base, '/') . '/' . $cleanPath;
 }
 
 function wps_archive_url(): string
