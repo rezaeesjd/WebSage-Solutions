@@ -24,7 +24,7 @@ function wps_default_settings(): array
         'github_owner' => 'rezaeesjd',
         'github_repo' => 'WebSage-Solutions',
         'github_branch' => 'main',
-        'github_content_path' => 'seo-content-system/tours',
+        'github_content_path' => 'WebPublisherSystem/content-system/tours',
         'website_link' => '{{WebsiteLink}}',
         'tripadvisor_link' => '{{TripAdvisorLink}}',
         'viator_link' => '{{ViatorLink}}',
