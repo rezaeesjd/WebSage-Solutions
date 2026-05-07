@@ -1,6 +1,12 @@
 # WebPublisherSystem
 
-A small standalone PHP system for publishing SEO blog content from a public GitHub repository.
+**WebPublisherSystem** is an **Automated SEO & Social Content Marketing Platform** for travel, tours, and local experience businesses.
+
+The ultimate business goal is **lead generation, customer acquisition, direct bookings, and growth** through content marketing automation.
+
+Technically, it is a **marketing automation platform focused on organic lead generation through content operations**.
+
+This first implementation is focused on SEO blog publishing: generating, organizing, syncing, and publishing booking-focused blog content from structured markdown files.
 
 This is not WordPress. It is designed to be uploaded as a normal folder to PHP web hosting.
 
@@ -10,10 +16,21 @@ This version includes:
 - settings page without password
 - public GitHub repository connection settings
 - GitHub connection test
-- ability to read the configured public repository content path
+- local blog archive and single blog pages powered by generated markdown files
 - local JSON settings storage
 
 No images are included yet.
+
+## Strategic scope
+The current scope is blog-first, but the platform direction can later expand into:
+- landing page generation
+- social media post generation
+- Google Business Profile content
+- email/newsletter content
+- multi-channel publishing workflows
+- content calendar and scheduling automation
+
+The core idea is to turn product/tour data into reusable SEO and marketing assets that support direct bookings and customer acquisition.
 
 ## Main structure
 ```text
@@ -23,11 +40,14 @@ WebPublisherSystem/
   settings.php               # redirects to platform/settings.php
   blog/                      # default public blog archive
     index.php
+    post.php
   platform/                  # runnable platform/admin/support files
     index.php
     settings.php
     functions.php
     github.php
+    content-loader.php
+    system-sync.php
     assets/
       style.css
     data/
@@ -92,11 +112,12 @@ platform/data/settings.json
 ```
 
 ## Current limitation
-This version connects to GitHub and tests the configured content path, but it does not yet create final public blog post pages from the markdown files.
+This version can render local markdown-based blog content from the uploaded `content-system/tours/` folder. GitHub should be used mainly through the system sync/update process, not on every public page load.
 
 Next phase can add:
-- Sync from GitHub button
+- Sync from GitHub button improvements
 - local cached posts
-- archive cards generated from `meta.json`
-- individual post pages
-- markdown rendering
+- cleaner permalink routing
+- landing page generation
+- social media content generation
+- multi-channel publisher modules
