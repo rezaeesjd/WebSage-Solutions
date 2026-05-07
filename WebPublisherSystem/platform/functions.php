@@ -87,9 +87,39 @@ function wps_asset_url(string $path): string
     return rtrim($base, '/') . '/' . $cleanPath;
 }
 
+function wps_normalize_archive_base_url(string $value): string
+{
+    $trimmed = trim($value);
+    if ($trimmed === '') {
+        return '';
+    }
+
+    if (preg_match('#^https?://#i', $trimmed)) {
+        return rtrim($trimmed, '/') . '/';
+    }
+
+    $path = '/' . trim($trimmed, '/');
+    if ($path === '/') {
+        return '/';
+    }
+
+    return $path . '/';
+}
+
 function wps_archive_url(): string
 {
-    return defined('WPS_ARCHIVE_URL') ? WPS_ARCHIVE_URL : 'index.php';
+    if (defined('WPS_ARCHIVE_URL')) {
+        return WPS_ARCHIVE_URL;
+    }
+
+    $settings = wps_load_settings();
+    $archiveUrl = wps_normalize_archive_base_url((string) ($settings['archive_base_url'] ?? ''));
+
+    if ($archiveUrl !== '') {
+        return $archiveUrl;
+    }
+
+    return '/blog/';
 }
 
 function wps_settings_url(): string

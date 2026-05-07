@@ -1,6 +1,5 @@
 <?php
 const WPS_ASSET_BASE = '.';
-const WPS_ARCHIVE_URL = '../blog/';
 const WPS_SETTINGS_URL = 'settings.php';
 
 require_once __DIR__ . '/functions.php';
@@ -85,6 +84,51 @@ function wps_sync_download_raw(string $url): array
     }
 
     return ['ok' => true, 'body' => $body, 'error' => '', 'status' => 200];
+}
+
+
+function wps_sync_via_git(array $settings, string $localRoot, array &$results): bool
+{
+    if (!function_exists('shell_exec')) {
+        $results[] = ['status' => 'error', 'path' => 'git', 'message' => 'shell_exec is disabled, cannot run git-based sync.'];
+        return false;
+    }
+
+    $owner = trim((string) ($settings['github_owner'] ?? ''));
+    $repo = trim((string) ($settings['github_repo'] ?? ''));
+    $branch = trim((string) ($settings['github_branch'] ?? 'main'));
+    if ($owner === '' || $repo === '') {
+        $results[] = ['status' => 'error', 'path' => 'git', 'message' => 'Missing GitHub owner/repo settings.'];
+        return false;
+    }
+
+    $tmpDir = sys_get_temp_dir() . '/wps-sync-' . bin2hex(random_bytes(6));
+    $repoUrl = 'https://github.com/' . rawurlencode($owner) . '/' . rawurlencode($repo) . '.git';
+    @mkdir($tmpDir, 0700, true);
+
+    $cloneCmd = 'git clone --depth 1 --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($tmpDir) . ' 2>&1';
+    $cloneOut = shell_exec($cloneCmd);
+    if (!is_dir($tmpDir . '/.git')) {
+        $results[] = ['status' => 'error', 'path' => 'git clone', 'message' => trim((string) $cloneOut) ?: 'git clone failed.'];
+        return false;
+    }
+
+    $sourcePath = $tmpDir . '/WebPublisherSystem';
+    if (!is_dir($sourcePath)) {
+        $results[] = ['status' => 'error', 'path' => 'WebPublisherSystem', 'message' => 'WebPublisherSystem folder not found in repository root.'];
+        shell_exec('rm -rf ' . escapeshellarg($tmpDir));
+        return false;
+    }
+
+    $rsyncCmd = 'rsync -a --delete --exclude platform/data/ --exclude .git/ ' . escapeshellarg($sourcePath . '/') . ' ' . escapeshellarg($localRoot . '/') . ' 2>&1';
+    $rsyncOut = shell_exec($rsyncCmd);
+    $results[] = ['status' => 'updated', 'path' => 'WebPublisherSystem/*', 'message' => 'Synced via git clone + rsync (platform/data preserved).'];
+    if ($rsyncOut && trim($rsyncOut) !== '') {
+        $results[] = ['status' => 'info', 'path' => 'rsync', 'message' => trim($rsyncOut)];
+    }
+
+    shell_exec('rm -rf ' . escapeshellarg($tmpDir));
+    return true;
 }
 
 function wps_sync_path(array $settings, string $repoPath, string $localRoot, array &$results): void
@@ -194,7 +238,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$localRoot) {
         $error = 'Could not resolve local WebPublisherSystem root folder.';
     } else {
-        wps_sync_path($settings, $repoRootPath, $localRoot, $results);
+        $gitSynced = wps_sync_via_git($settings, $localRoot, $results);
+        if (!$gitSynced) {
+            wps_sync_path($settings, $repoRootPath, $localRoot, $results);
+        }
         $errors = array_filter($results, fn($item) => $item['status'] === 'error');
         $success = empty($errors)
             ? 'System sync completed successfully.'
@@ -207,7 +254,7 @@ wps_render_header('System Sync');
 
 <section class="panel">
     <h1>Sync WebPublisherSystem from GitHub</h1>
-    <p class="muted">This pulls the latest files from the public GitHub repository into the uploaded server folder. Runtime settings in <code>platform/data/</code> are skipped so your saved settings are not overwritten.</p>
+    <p class="muted">This first tries a <strong>git clone + rsync</strong> sync (to avoid GitHub API rate limits), then automatically falls back to GitHub API sync if git sync is unavailable. Runtime settings in <code>platform/data/</code> are always skipped so your saved settings are not overwritten.</p>
 
     <?php if ($error): ?>
         <div class="alert alert-error"><?php echo wps_h($error); ?></div>
@@ -220,7 +267,7 @@ wps_render_header('System Sync');
     <form method="post" class="actions">
         <button type="submit">Sync All System Files from GitHub</button>
         <a class="button-secondary" href="settings.php">Back to Settings</a>
-        <a class="button-secondary" href="../blog/">View Blog Archive</a>
+        <a class="button-secondary" href="<?php echo wps_h(wps_archive_url()); ?>">View Blog Archive</a>
     </form>
 </section>
 

@@ -1,6 +1,5 @@
 <?php
 const WPS_ASSET_BASE = '../platform';
-const WPS_ARCHIVE_URL = '../blog/';
 const WPS_SETTINGS_URL = '../platform/settings.php';
 
 require_once __DIR__ . '/../platform/content-loader.php';
