@@ -1,3 +1,3 @@
 <?php
-header('Location: platform/index.php');
+header('Location: blog/');
 exit;
