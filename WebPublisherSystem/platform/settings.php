@@ -78,6 +78,14 @@ wps_render_header('Settings');
 </section>
 
 <section class="panel">
+    <h2>System update</h2>
+    <p>This updates the uploaded WebPublisherSystem files from the public GitHub repository. Your saved settings in <code>platform/data/</code> are skipped.</p>
+    <div class="actions">
+        <a class="button-secondary" href="system-sync.php">Open System Sync</a>
+    </div>
+</section>
+
+<section class="panel">
     <h2>Configuration</h2>
     <form method="post" class="form grid-form">
         <label>
@@ -143,7 +151,7 @@ wps_render_header('Settings');
         <div class="full actions">
             <button type="submit" name="action" value="save_settings">Save Settings</button>
             <button type="submit" name="action" value="test_connection">Save & Test GitHub Connection</button>
-            <a class="button-secondary" href="index.php">View Archive</a>
+            <a class="button-secondary" href="../blog/">View Blog Archive</a>
         </div>
     </form>
 </section>
