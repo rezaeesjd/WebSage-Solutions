@@ -133,15 +133,44 @@ function wps_archive_slug_from_setting(array $settings): string
     return trim($archiveUrl, '/');
 }
 
+function wps_sanitize_archive_slug(string $slug): string
+{
+    $parts = array_filter(explode('/', trim($slug, '/')), fn($part) => $part !== '');
+    $safe = [];
+
+    foreach ($parts as $part) {
+        if ($part === '.' || $part === '..') {
+            return '';
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $part)) {
+            return '';
+        }
+
+        $safe[] = $part;
+    }
+
+    return implode('/', $safe);
+}
+
 function wps_ensure_archive_alias(array $settings): void
 {
-    $slug = wps_archive_slug_from_setting($settings);
+    $slug = wps_sanitize_archive_slug(wps_archive_slug_from_setting($settings));
     $root = realpath(__DIR__ . '/..');
     if ($root === false || $slug === '' || $slug === 'blog') {
         return;
     }
 
     $aliasDir = $root . '/' . $slug;
+    $aliasRealParent = realpath(dirname($aliasDir));
+    if ($aliasRealParent !== false) {
+        $rootPrefix = rtrim(str_replace('\\', '/', $root), '/') . '/';
+        $parentPrefix = rtrim(str_replace('\\', '/', $aliasRealParent), '/') . '/';
+        if (!str_starts_with($parentPrefix, $rootPrefix)) {
+            return;
+        }
+    }
+
     if (!is_dir($aliasDir)) {
         mkdir($aliasDir, 0755, true);
     }
@@ -162,18 +191,20 @@ require_once __DIR__ . '/../blog/post.php';
 
 function wps_redirect_legacy_blog_path_if_needed(array $settings): void
 {
-    $slug = wps_archive_slug_from_setting($settings);
+    $slug = wps_sanitize_archive_slug(wps_archive_slug_from_setting($settings));
     if ($slug === '' || $slug === 'blog') {
         return;
     }
 
     $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
-    $currentDir = basename(dirname($scriptName));
-    if ($currentDir === '' || $currentDir === '.') {
+    $scriptDir = trim(str_replace('\\', '/', dirname($scriptName)), '/');
+    if ($scriptDir === '' || $scriptDir === '.') {
         return;
     }
 
-    if ($currentDir === $slug) {
+    $scriptSegments = explode('/', $scriptDir);
+    $currentArchivePath = end($scriptSegments);
+    if ($currentArchivePath === $slug) {
         return;
     }
 

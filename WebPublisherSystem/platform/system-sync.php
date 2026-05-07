@@ -120,11 +120,21 @@ function wps_sync_via_git(array $settings, string $localRoot, array &$results): 
         return false;
     }
 
-    $rsyncCmd = 'rsync -a --delete --exclude platform/data/ --exclude .git/ ' . escapeshellarg($sourcePath . '/') . ' ' . escapeshellarg($localRoot . '/') . ' 2>&1';
-    $rsyncOut = shell_exec($rsyncCmd);
+    $rsyncCmd = 'rsync -a --delete --exclude platform/data/ --exclude .git/ ' . escapeshellarg($sourcePath . '/') . ' ' . escapeshellarg($localRoot . '/');
+    $rsyncOutput = [];
+    $rsyncCode = 0;
+    exec($rsyncCmd . ' 2>&1', $rsyncOutput, $rsyncCode);
+    $rsyncOut = trim(implode("\n", $rsyncOutput));
+
+    if ($rsyncCode !== 0) {
+        $results[] = ['status' => 'error', 'path' => 'rsync', 'message' => $rsyncOut ?: 'rsync failed.'];
+        shell_exec('rm -rf ' . escapeshellarg($tmpDir));
+        return false;
+    }
+
     $results[] = ['status' => 'updated', 'path' => 'WebPublisherSystem/*', 'message' => 'Synced via git clone + rsync (platform/data preserved).'];
-    if ($rsyncOut && trim($rsyncOut) !== '') {
-        $results[] = ['status' => 'info', 'path' => 'rsync', 'message' => trim($rsyncOut)];
+    if ($rsyncOut !== '') {
+        $results[] = ['status' => 'info', 'path' => 'rsync', 'message' => $rsyncOut];
     }
 
     shell_exec('rm -rf ' . escapeshellarg($tmpDir));
