@@ -75,6 +75,22 @@ function wps_current_url_base(): string
     return $scheme . '://' . $host . ($scriptDir ? $scriptDir : '');
 }
 
+function wps_asset_url(string $path): string
+{
+    $base = defined('WPS_ASSET_BASE') ? WPS_ASSET_BASE : '';
+    return rtrim($base, '/') . '/' . ltrim($path, '/');
+}
+
+function wps_archive_url(): string
+{
+    return defined('WPS_ARCHIVE_URL') ? WPS_ARCHIVE_URL : 'index.php';
+}
+
+function wps_settings_url(): string
+{
+    return defined('WPS_SETTINGS_URL') ? WPS_SETTINGS_URL : 'settings.php';
+}
+
 function wps_render_header(string $title): void
 {
     $settings = wps_load_settings();
@@ -85,15 +101,15 @@ function wps_render_header(string $title): void
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title><?php echo wps_h($title); ?> | <?php echo wps_h($settings['site_name']); ?></title>
-        <link rel="stylesheet" href="assets/style.css">
+        <link rel="stylesheet" href="<?php echo wps_h(wps_asset_url('assets/style.css')); ?>">
     </head>
     <body>
     <header class="site-header">
         <div class="container header-inner">
-            <a class="brand" href="index.php"><?php echo wps_h($settings['site_name']); ?></a>
+            <a class="brand" href="<?php echo wps_h(wps_archive_url()); ?>"><?php echo wps_h($settings['site_name']); ?></a>
             <nav>
-                <a href="index.php">Archive</a>
-                <a href="settings.php">Settings</a>
+                <a href="<?php echo wps_h(wps_archive_url()); ?>">Archive</a>
+                <a href="<?php echo wps_h(wps_settings_url()); ?>">Settings</a>
             </nav>
         </div>
     </header>
