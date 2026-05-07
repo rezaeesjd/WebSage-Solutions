@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $settings['viator_link'] = trim($_POST['viator_link'] ?? $settings['viator_link']);
 
     if (wps_save_settings($settings)) {
+        wps_ensure_archive_alias($settings);
         $success = 'Settings saved.';
     } else {
         $error = 'Could not save settings. Make sure the platform/data folder is writable.';
@@ -35,9 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $settings = wps_load_settings();
 }
 
-if (!$settings['archive_base_url']) {
-    $settings['archive_base_url'] = wps_current_url_base();
-}
 
 wps_render_header('Settings');
 ?>
@@ -151,7 +149,7 @@ wps_render_header('Settings');
         <div class="full actions">
             <button type="submit" name="action" value="save_settings">Save Settings</button>
             <button type="submit" name="action" value="test_connection">Save & Test GitHub Connection</button>
-            <a class="button-secondary" href="../blog/">View Blog Archive</a>
+            <a class="button-secondary" href="<?php echo wps_h(wps_archive_url()); ?>">View Blog Archive</a>
         </div>
     </form>
 </section>

@@ -87,9 +87,107 @@ function wps_asset_url(string $path): string
     return rtrim($base, '/') . '/' . $cleanPath;
 }
 
+function wps_normalize_archive_base_url(string $value): string
+{
+    $trimmed = trim($value);
+    if ($trimmed === '') {
+        return '';
+    }
+
+    if (preg_match('#^https?://#i', $trimmed)) {
+        return rtrim($trimmed, '/') . '/';
+    }
+
+    $path = '/' . trim($trimmed, '/');
+    if ($path === '/') {
+        return '/';
+    }
+
+    return $path . '/';
+}
+
 function wps_archive_url(): string
 {
-    return defined('WPS_ARCHIVE_URL') ? WPS_ARCHIVE_URL : 'index.php';
+    if (defined('WPS_ARCHIVE_URL')) {
+        return WPS_ARCHIVE_URL;
+    }
+
+    $settings = wps_load_settings();
+    $archiveUrl = wps_normalize_archive_base_url((string) ($settings['archive_base_url'] ?? ''));
+
+    if ($archiveUrl !== '') {
+        return $archiveUrl;
+    }
+
+    return '/blog/';
+}
+
+
+function wps_archive_slug_from_setting(array $settings): string
+{
+    $archiveUrl = wps_normalize_archive_base_url((string) ($settings['archive_base_url'] ?? ''));
+    if ($archiveUrl === '' || preg_match('#^https?://#i', $archiveUrl)) {
+        return '';
+    }
+
+    return trim($archiveUrl, '/');
+}
+
+function wps_ensure_archive_alias(array $settings): void
+{
+    $slug = wps_archive_slug_from_setting($settings);
+    $root = realpath(__DIR__ . '/..');
+    if ($root === false || $slug === '' || $slug === 'blog') {
+        return;
+    }
+
+    $aliasDir = $root . '/' . $slug;
+    if (!is_dir($aliasDir)) {
+        mkdir($aliasDir, 0755, true);
+    }
+
+    $marker = $aliasDir . '/.wps-archive-alias';
+    $indexFile = $aliasDir . '/index.php';
+    $postFile = $aliasDir . '/post.php';
+
+    file_put_contents($marker, "managed-by=WebPublisherSystem
+");
+    file_put_contents($indexFile, "<?php
+require_once __DIR__ . '/../blog/index.php';
+");
+    file_put_contents($postFile, "<?php
+require_once __DIR__ . '/../blog/post.php';
+");
+}
+
+function wps_redirect_legacy_blog_path_if_needed(array $settings): void
+{
+    $slug = wps_archive_slug_from_setting($settings);
+    if ($slug === '' || $slug === 'blog') {
+        return;
+    }
+
+    $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $currentDir = basename(dirname($scriptName));
+    if ($currentDir === '' || $currentDir === '.') {
+        return;
+    }
+
+    if ($currentDir === $slug) {
+        return;
+    }
+
+    $targetBase = wps_archive_url();
+    $isPost = basename($scriptName) === 'post.php';
+    if ($isPost) {
+        $slugParam = isset($_GET['slug']) ? (string) $_GET['slug'] : '';
+        $target = rtrim($targetBase, '/') . '/post.php' . ($slugParam !== '' ? '?slug=' . rawurlencode($slugParam) : '');
+        header('Location: ' . $target, true, 302);
+        exit;
+    }
+
+    header('Location: ' . $targetBase, true, 302);
+    exit;
 }
 
 function wps_settings_url(): string
