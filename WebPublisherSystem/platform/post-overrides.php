@@ -39,11 +39,17 @@ function wps_load_post_override(string $baseSlug): array
     return is_array($data) ? $data : [];
 }
 
-function wps_save_post_override(string $baseSlug, array $override): bool
+/**
+ * Persist a post override. Writes are atomic and protected against
+ * public_slug collisions with other tours.
+ *
+ * @return array{ok: bool, error: string}
+ */
+function wps_save_post_override(string $baseSlug, array $override): array
 {
     $safeSlug = wps_post_safe_slug($baseSlug);
     if ($safeSlug === '') {
-        return false;
+        return ['ok' => false, 'error' => 'Invalid base slug.'];
     }
 
     wps_ensure_post_overrides_dir();
@@ -55,12 +61,59 @@ function wps_save_post_override(string $baseSlug, array $override): bool
         if ($override['public_slug'] === '') {
             $override['public_slug'] = $safeSlug;
         }
+
+        if ($override['public_slug'] !== $safeSlug && function_exists('wps_load_settings')) {
+            $settings = wps_load_settings();
+            if (wps_public_slug_in_use($settings, $override['public_slug'], $safeSlug)) {
+                return ['ok' => false, 'error' => 'That public slug is already used by another post.'];
+            }
+        }
     }
 
-    return file_put_contents(
+    $ok = wps_atomic_write(
         wps_post_override_path($safeSlug),
         json_encode($override, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
-    ) !== false;
+    );
+
+    return $ok
+        ? ['ok' => true, 'error' => '']
+        : ['ok' => false, 'error' => 'Could not write override file. Check that platform/data/ is writable.'];
+}
+
+/**
+ * Returns true if any other tour already exposes the given public slug.
+ * Pass the current tour's base_slug as $excludeBaseSlug so a tour can
+ * keep its own slug.
+ */
+function wps_public_slug_in_use(array $settings, string $publicSlug, string $excludeBaseSlug): bool
+{
+    $publicSlug = wps_post_safe_slug($publicSlug);
+    $excludeBaseSlug = wps_post_safe_slug($excludeBaseSlug);
+    if ($publicSlug === '' || !function_exists('wps_get_posts')) {
+        return false;
+    }
+
+    $postsResult = wps_get_posts($settings);
+    if (!$postsResult['ok']) {
+        return false;
+    }
+
+    foreach ($postsResult['posts'] as $post) {
+        $postBaseSlug = wps_post_safe_slug((string) ($post['slug'] ?? ''));
+        if ($postBaseSlug === $excludeBaseSlug) {
+            continue;
+        }
+
+        $applied = wps_apply_post_override($post);
+        $appliedPublic = wps_post_safe_slug((string) ($applied['public_slug'] ?? ''));
+        $appliedBase = wps_post_safe_slug((string) ($applied['base_slug'] ?? ''));
+
+        if ($appliedPublic === $publicSlug || $appliedBase === $publicSlug) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function wps_post_public_slug(array $post): string
