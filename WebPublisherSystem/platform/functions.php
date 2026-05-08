@@ -238,9 +238,28 @@ function wps_settings_url(): string
     return defined('WPS_SETTINGS_URL') ? WPS_SETTINGS_URL : 'settings.php';
 }
 
+function wps_current_nav_item(): string
+{
+    $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $basename = basename($scriptName);
+
+    if (str_contains($scriptName, '/platform/') && $basename === 'settings.php') {
+        return 'settings';
+    }
+
+    if (str_contains($scriptName, '/blog/') || $basename === 'post.php') {
+        return 'archive';
+    }
+
+    return '';
+}
+
 function wps_render_header(string $title): void
 {
     $settings = wps_load_settings();
+    $currentNavItem = wps_current_nav_item();
+    $archiveIsActive = $currentNavItem === 'archive';
+    $settingsIsActive = $currentNavItem === 'settings';
     ?>
     <!doctype html>
     <html lang="en">
@@ -255,8 +274,8 @@ function wps_render_header(string $title): void
         <div class="container header-inner">
             <a class="brand" href="<?php echo wps_h(wps_archive_url()); ?>"><?php echo wps_h($settings['site_name']); ?></a>
             <nav>
-                <a href="<?php echo wps_h(wps_archive_url()); ?>">Archive</a>
-                <a href="<?php echo wps_h(wps_settings_url()); ?>">Settings</a>
+                <a class="<?php echo $archiveIsActive ? 'active' : ''; ?>" href="<?php echo wps_h(wps_archive_url()); ?>" <?php echo $archiveIsActive ? 'aria-current="page"' : ''; ?>>Archive</a>
+                <a class="<?php echo $settingsIsActive ? 'active' : ''; ?>" href="<?php echo wps_h(wps_settings_url()); ?>" <?php echo $settingsIsActive ? 'aria-current="page"' : ''; ?>>Settings</a>
             </nav>
         </div>
     </header>
