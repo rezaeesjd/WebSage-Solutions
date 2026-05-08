@@ -2,8 +2,11 @@
 const WPS_ASSET_BASE = '.';
 const WPS_SETTINGS_URL = 'settings.php';
 
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/content-loader.php';
 require_once __DIR__ . '/post-overrides.php';
+
+wps_require_auth();
 
 $settings = wps_load_settings();
 $slug = trim($_GET['slug'] ?? $_POST['base_slug'] ?? '');
@@ -39,6 +42,8 @@ $editValues = [
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $post) {
+    wps_csrf_validate_or_die();
+
     $submittedPublicSlug = wps_post_safe_slug((string) ($_POST['public_slug'] ?? ''));
     $saveData = [
         'public_slug' => $submittedPublicSlug !== '' ? $submittedPublicSlug : $baseSlug,
@@ -55,14 +60,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $post) {
         $error = 'Title is required.';
     } elseif ($saveData['blog_content'] === '') {
         $error = 'Blog content is required.';
-    } elseif (wps_save_post_override($baseSlug, $saveData)) {
-        $success = 'Blog post changes saved locally.';
-        $post = wps_apply_post_override(array_merge($post, $saveData));
-        $baseSlug = (string) ($post['base_slug'] ?? $baseSlug);
-        $publicSlug = (string) ($post['public_slug'] ?? $saveData['public_slug']);
+    } elseif ($submittedPublicSlug !== '' && wps_public_slug_in_use($settings, $submittedPublicSlug, $baseSlug)) {
+        $error = 'That public slug is already used by another post. Choose a different slug.';
         $editValues = $saveData;
     } else {
-        $error = 'Could not save this blog post. Make sure platform/data/ is writable.';
+        $saveResult = wps_save_post_override($baseSlug, $saveData);
+        if ($saveResult['ok']) {
+            $success = 'Blog post changes saved locally.';
+            $post = wps_apply_post_override(array_merge($post, $saveData));
+            $baseSlug = (string) ($post['base_slug'] ?? $baseSlug);
+            $publicSlug = (string) ($post['public_slug'] ?? $saveData['public_slug']);
+            $editValues = $saveData;
+        } else {
+            $error = $saveResult['error'] ?: 'Could not save this blog post. Make sure platform/data/ is writable.';
+            $editValues = $saveData;
+        }
     }
 }
 
@@ -101,6 +113,7 @@ wps_render_header($pageTitle);
 
     <section class="panel">
         <form method="post" class="form edit-post-form">
+            <?php echo wps_csrf_field(); ?>
             <input type="hidden" name="base_slug" value="<?php echo wps_h($baseSlug); ?>">
 
             <label>

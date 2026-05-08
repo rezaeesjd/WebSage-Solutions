@@ -1,5 +1,7 @@
 <?php
-require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/auth.php';
+
+wps_require_auth();
 
 $settings = wps_load_settings();
 $error = '';
@@ -9,6 +11,7 @@ $archiveSlug = wps_archive_slug_from_setting($settings);
 $archivePrefix = rtrim(wps_system_url_base(), '/') . '/';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    wps_csrf_validate_or_die();
     $settings['site_name'] = trim($_POST['site_name'] ?? $settings['site_name']);
     $settings['archive_title'] = trim($_POST['archive_title'] ?? $settings['archive_title']);
     $settings['archive_description'] = trim($_POST['archive_description'] ?? $settings['archive_description']);
@@ -45,16 +48,20 @@ wps_render_header('Settings');
 </section>
 
 <section class="panel">
-    <h2>System update</h2>
-    <p>This updates the uploaded WebPublisherSystem files from GitHub. Your local settings and single-post edits in <code>platform/data/</code> are skipped.</p>
+    <h2>Operations</h2>
+    <p>Sync from GitHub, back up local edits, or run the QA gate that checks every tour package against the publish-readiness rules.</p>
     <div class="actions">
-        <a class="button-secondary" href="system-sync.php">Open System Sync</a>
+        <a class="button-secondary" href="system-sync.php">System Sync</a>
+        <a class="button-secondary" href="backup.php">Download Backup</a>
+        <a class="button-secondary" href="qa.php">Run QA</a>
     </div>
+    <p class="muted">Signed in as <strong><?php echo wps_h(wps_current_admin_email()); ?></strong>. <a href="logout.php">Sign out</a>.</p>
 </section>
 
 <section class="panel">
     <h2>Configuration</h2>
     <form method="post" class="form grid-form">
+        <?php echo wps_csrf_field(); ?>
         <label>
             Site name
             <input type="text" name="site_name" value="<?php echo wps_h($settings['site_name']); ?>" required>

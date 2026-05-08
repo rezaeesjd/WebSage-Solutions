@@ -2,9 +2,11 @@
 const WPS_ASSET_BASE = '../platform';
 const WPS_SETTINGS_URL = '../platform/settings.php';
 
+require_once __DIR__ . '/../platform/auth.php';
 require_once __DIR__ . '/../platform/content-loader.php';
 require_once __DIR__ . '/../platform/post-overrides.php';
 
+$adminSignedIn = wps_is_logged_in();
 $settings = wps_load_settings();
 wps_redirect_legacy_blog_path_if_needed($settings);
 $slug = trim($_GET['slug'] ?? '');
@@ -100,7 +102,7 @@ wps_render_header($pageTitle);
 
     <section class="panel muted-panel">
         <div class="actions">
-            <?php if (!$isSample): ?>
+            <?php if (!$isSample && $adminSignedIn): ?>
                 <a class="button-secondary" href="../platform/edit-post.php?slug=<?php echo urlencode($baseSlug); ?>">Edit This Blog Post</a>
             <?php endif; ?>
             <a class="button-secondary" href="./">← Back to Blog Archive</a>
