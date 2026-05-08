@@ -111,6 +111,7 @@ main.container { padding-top: 28px; padding-bottom: 40px; }
 
 .form { display: grid; gap: 18px; }
 .grid-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.compact-grid { gap: 14px; }
 .full { grid-column: 1 / -1; }
 
 label { display: grid; gap: 8px; font-weight: 700; }
@@ -122,6 +123,13 @@ input, textarea {
     font: inherit;
     color: var(--text);
     background: #fff;
+}
+textarea { resize: vertical; }
+.edit-post-form textarea[name="blog_content"],
+.edit-post-form textarea[name="faq_content"] {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 14px;
+    line-height: 1.55;
 }
 small { color: var(--muted); font-weight: 400; }
 
@@ -233,6 +241,18 @@ button:hover { background: var(--brand-dark); }
 .post-card h3 a { color: var(--text); }
 .post-card h3 a:hover { color: var(--brand); }
 .read-more { color: var(--brand); font-weight: 700; }
+.edit-link {
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 14px;
+}
+.card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+}
 .muted-panel { background: #fbfcff; }
 
 .post-meta {
@@ -269,7 +289,7 @@ button:hover { background: var(--brand-dark); }
 }
 
 @media (max-width: 760px) {
-    .header-inner, .actions, .archive-url-actions { align-items: stretch; flex-direction: column; }
+    .header-inner, .actions, .archive-url-actions, .card-actions { align-items: stretch; flex-direction: column; }
     .grid-form, .post-grid, .status-grid { grid-template-columns: 1fr; }
     .hero h1, .panel h1 { font-size: 28px; }
     .content-body h1 { font-size: 27px; }
@@ -314,7 +334,11 @@ button:hover { background: var(--brand-dark); }
         padding: 0 12px;
     }
     .button-secondary,
-    button {
+    button,
+    .edit-link,
+    .read-more {
         width: 100%;
+        justify-content: center;
+        text-align: center;
     }
 }
