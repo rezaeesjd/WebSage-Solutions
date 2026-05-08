@@ -106,12 +106,13 @@ function wps_asset_url(string $path): string
 {
     $base = defined('WPS_ASSET_BASE') ? trim((string) WPS_ASSET_BASE) : '';
     $cleanPath = ltrim($path, '/');
+    $assetUrl = $base === '' ? $cleanPath : rtrim($base, '/') . '/' . $cleanPath;
 
-    if ($base === '') {
-        return $cleanPath;
-    }
+    $localPath = __DIR__ . '/' . $cleanPath;
+    $version = is_file($localPath) ? (string) filemtime($localPath) : (string) time();
+    $separator = str_contains($assetUrl, '?') ? '&' : '?';
 
-    return rtrim($base, '/') . '/' . $cleanPath;
+    return $assetUrl . $separator . 'v=' . rawurlencode($version);
 }
 
 function wps_sanitize_archive_slug(string $slug): string
