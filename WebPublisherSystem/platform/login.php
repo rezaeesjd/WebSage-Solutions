@@ -23,9 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $email = trim((string) ($_POST['email'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
+    $throttleKey = wps_auth_throttle_key($email);
 
-    if (wps_auth_failed_attempt_count() >= WPS_AUTH_FAILED_LOGIN_LIMIT) {
-        $error = 'Too many failed login attempts. Wait a few minutes and try again.';
+    if (wps_auth_failed_attempt_count($throttleKey) >= WPS_AUTH_FAILED_LOGIN_LIMIT) {
+        $error = 'Too many failed login attempts from this address for this email. Wait a few minutes and try again.';
     } else {
         $admin = wps_auth_load();
         $valid = $admin
@@ -33,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             && password_verify($password, (string) $admin['password_hash']);
 
         if ($valid) {
-            wps_auth_clear_failed_attempts();
+            wps_auth_clear_failed_attempts($throttleKey);
             wps_login($admin['email']);
 
             if (password_needs_rehash((string) $admin['password_hash'], PASSWORD_DEFAULT)) {
@@ -49,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        wps_auth_record_failed_attempt($email);
+        wps_auth_record_failed_attempt($throttleKey);
         usleep(random_int(150000, 400000));
         $error = 'Invalid email or password.';
     }

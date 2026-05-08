@@ -133,58 +133,82 @@ function wps_auth_failed_attempts_path(): string
     return WPS_DATA_DIR . '/auth-attempts.json';
 }
 
-function wps_auth_record_failed_attempt(string $email): int
+/**
+ * Per-requester throttle key. Combining the lower-cased email with the
+ * client IP keeps an attacker hammering one address from locking out
+ * other admins or other source addresses.
+ */
+function wps_auth_throttle_key(string $email): string
 {
-    wps_ensure_data_dir();
-    $path = wps_auth_failed_attempts_path();
-    $now = time();
-    $window = WPS_AUTH_FAILED_LOGIN_WINDOW_SECONDS;
-
-    $attempts = [];
-    if (is_file($path)) {
-        $decoded = json_decode((string) file_get_contents($path), true);
-        if (is_array($decoded)) {
-            $attempts = $decoded;
-        }
-    }
-
-    $attempts = array_values(array_filter(
-        $attempts,
-        fn($entry) => is_array($entry) && isset($entry['at']) && ($now - (int) $entry['at']) < $window
-    ));
-
-    $attempts[] = ['email' => $email, 'at' => $now];
-
-    wps_atomic_write($path, json_encode($attempts, JSON_PRETTY_PRINT));
-
-    return count($attempts);
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    return strtolower(trim($email)) . '|' . $ip;
 }
 
-function wps_auth_failed_attempt_count(): int
+function wps_auth_load_attempts(): array
 {
     $path = wps_auth_failed_attempts_path();
     if (!is_file($path)) {
-        return 0;
+        return [];
     }
     $decoded = json_decode((string) file_get_contents($path), true);
-    if (!is_array($decoded)) {
-        return 0;
-    }
-    $now = time();
-    $window = WPS_AUTH_FAILED_LOGIN_WINDOW_SECONDS;
+    return is_array($decoded) ? $decoded : [];
+}
 
-    return count(array_filter(
-        $decoded,
+function wps_auth_filter_active(array $attempts, int $now): array
+{
+    $window = WPS_AUTH_FAILED_LOGIN_WINDOW_SECONDS;
+    return array_values(array_filter(
+        $attempts,
         fn($entry) => is_array($entry) && isset($entry['at']) && ($now - (int) $entry['at']) < $window
     ));
 }
 
-function wps_auth_clear_failed_attempts(): void
+function wps_auth_record_failed_attempt(string $key): int
 {
-    $path = wps_auth_failed_attempts_path();
-    if (is_file($path)) {
-        @unlink($path);
+    wps_ensure_data_dir();
+    $now = time();
+    $attempts = wps_auth_filter_active(wps_auth_load_attempts(), $now);
+
+    $attempts[] = ['key' => $key, 'at' => $now];
+
+    wps_atomic_write(wps_auth_failed_attempts_path(), json_encode($attempts, JSON_PRETTY_PRINT));
+
+    return wps_auth_failed_attempt_count($key);
+}
+
+function wps_auth_failed_attempt_count(string $key): int
+{
+    $now = time();
+    $attempts = wps_auth_filter_active(wps_auth_load_attempts(), $now);
+
+    return count(array_filter(
+        $attempts,
+        fn($entry) => is_array($entry) && (string) ($entry['key'] ?? '') === $key
+    ));
+}
+
+function wps_auth_clear_failed_attempts(string $key): void
+{
+    $attempts = wps_auth_load_attempts();
+    if (!$attempts) {
+        return;
     }
+
+    $remaining = array_values(array_filter(
+        $attempts,
+        fn($entry) => is_array($entry) && (string) ($entry['key'] ?? '') !== $key
+    ));
+
+    if ($remaining === $attempts) {
+        return;
+    }
+
+    if (empty($remaining)) {
+        @unlink(wps_auth_failed_attempts_path());
+        return;
+    }
+
+    wps_atomic_write(wps_auth_failed_attempts_path(), json_encode($remaining, JSON_PRETTY_PRINT));
 }
 
 function wps_csrf_token(): string
