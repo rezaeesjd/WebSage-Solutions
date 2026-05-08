@@ -3,6 +3,7 @@ const WPS_ASSET_BASE = '../platform';
 const WPS_SETTINGS_URL = '../platform/settings.php';
 
 require_once __DIR__ . '/../platform/content-loader.php';
+require_once __DIR__ . '/../platform/post-overrides.php';
 
 $settings = wps_load_settings();
 wps_redirect_legacy_blog_path_if_needed($settings);
@@ -35,7 +36,22 @@ if ($isSample) {
 } else {
     $postResult = $slug ? wps_find_post_by_slug($settings, $slug) : ['ok' => false, 'error' => 'Missing post slug.', 'post' => null];
     $post = $postResult['post'] ?? null;
+
+    if ($post) {
+        $post = wps_apply_post_override($post);
+    }
+
     $contentResult = $post ? wps_get_post_content($settings, $post) : ['ok' => false, 'error' => $postResult['error'] ?? 'Post not found.', 'blog' => '', 'faq' => ''];
+
+    if ($post && $contentResult['ok']) {
+        $override = wps_load_post_override((string) ($post['slug'] ?? ''));
+        if (array_key_exists('blog_content', $override)) {
+            $contentResult['blog'] = wps_replace_placeholders((string) $override['blog_content'], $settings);
+        }
+        if (array_key_exists('faq_content', $override)) {
+            $contentResult['faq'] = wps_replace_placeholders((string) $override['faq_content'], $settings);
+        }
+    }
 }
 
 $pageTitle = $post['title'] ?? 'Blog Post';
@@ -64,6 +80,9 @@ wps_render_header($pageTitle);
             <?php if (!empty($post['product_reference_code'])): ?>
                 <span>Ref <?php echo wps_h($post['product_reference_code']); ?></span>
             <?php endif; ?>
+            <?php if (!empty($post['has_local_edits'])): ?>
+                <span>Edited</span>
+            <?php endif; ?>
         </div>
 
         <div class="content-body">
@@ -80,7 +99,12 @@ wps_render_header($pageTitle);
     <?php endif; ?>
 
     <section class="panel muted-panel">
-        <a class="button-secondary" href="./">← Back to Blog Archive</a>
+        <div class="actions">
+            <?php if (!$isSample): ?>
+                <a class="button-secondary" href="../platform/edit-post.php?slug=<?php echo urlencode($post['slug']); ?>">Edit This Blog Post</a>
+            <?php endif; ?>
+            <a class="button-secondary" href="./">← Back to Blog Archive</a>
+        </div>
     </section>
 <?php endif; ?>
 
