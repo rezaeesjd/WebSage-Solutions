@@ -9,9 +9,9 @@ function wps_post_safe_slug(string $slug): string
     return preg_match('/^[a-zA-Z0-9_-]+$/', $slug) ? $slug : '';
 }
 
-function wps_post_override_path(string $slug): string
+function wps_post_override_path(string $baseSlug): string
 {
-    return WPS_POST_OVERRIDES_DIR . '/' . wps_post_safe_slug($slug) . '.json';
+    return WPS_POST_OVERRIDES_DIR . '/' . wps_post_safe_slug($baseSlug) . '.json';
 }
 
 function wps_ensure_post_overrides_dir(): void
@@ -21,9 +21,9 @@ function wps_ensure_post_overrides_dir(): void
     }
 }
 
-function wps_load_post_override(string $slug): array
+function wps_load_post_override(string $baseSlug): array
 {
-    $safeSlug = wps_post_safe_slug($slug);
+    $safeSlug = wps_post_safe_slug($baseSlug);
     if ($safeSlug === '') {
         return [];
     }
@@ -39,16 +39,23 @@ function wps_load_post_override(string $slug): array
     return is_array($data) ? $data : [];
 }
 
-function wps_save_post_override(string $slug, array $override): bool
+function wps_save_post_override(string $baseSlug, array $override): bool
 {
-    $safeSlug = wps_post_safe_slug($slug);
+    $safeSlug = wps_post_safe_slug($baseSlug);
     if ($safeSlug === '') {
         return false;
     }
 
     wps_ensure_post_overrides_dir();
-    $override['slug'] = $safeSlug;
+    $override['base_slug'] = $safeSlug;
     $override['updated_at'] = gmdate('c');
+
+    if (isset($override['public_slug'])) {
+        $override['public_slug'] = wps_post_safe_slug((string) $override['public_slug']);
+        if ($override['public_slug'] === '') {
+            $override['public_slug'] = $safeSlug;
+        }
+    }
 
     return file_put_contents(
         wps_post_override_path($safeSlug),
@@ -56,10 +63,23 @@ function wps_save_post_override(string $slug, array $override): bool
     ) !== false;
 }
 
+function wps_post_public_slug(array $post): string
+{
+    $baseSlug = wps_post_safe_slug((string) ($post['base_slug'] ?? $post['slug'] ?? ''));
+    $override = wps_load_post_override($baseSlug);
+    $publicSlug = wps_post_safe_slug((string) ($override['public_slug'] ?? ''));
+
+    return $publicSlug !== '' ? $publicSlug : $baseSlug;
+}
+
 function wps_apply_post_override(array $post): array
 {
-    $override = wps_load_post_override((string) ($post['slug'] ?? ''));
+    $baseSlug = wps_post_safe_slug((string) ($post['slug'] ?? ''));
+    $post['base_slug'] = $baseSlug;
+
+    $override = wps_load_post_override($baseSlug);
     if (!$override) {
+        $post['public_slug'] = $baseSlug;
         $post['has_local_edits'] = false;
         return $post;
     }
@@ -70,8 +90,32 @@ function wps_apply_post_override(array $post): array
         }
     }
 
+    $publicSlug = wps_post_safe_slug((string) ($override['public_slug'] ?? ''));
+    $post['public_slug'] = $publicSlug !== '' ? $publicSlug : $baseSlug;
     $post['has_local_edits'] = true;
     $post['local_override'] = $override;
 
     return $post;
+}
+
+function wps_find_post_by_public_or_base_slug(array $settings, string $requestedSlug): array
+{
+    $requestedSlug = wps_post_safe_slug($requestedSlug);
+    if ($requestedSlug === '' || !function_exists('wps_get_posts')) {
+        return ['ok' => false, 'error' => 'Post not found.', 'post' => null];
+    }
+
+    $postsResult = wps_get_posts($settings);
+    if (!$postsResult['ok']) {
+        return ['ok' => false, 'error' => $postsResult['error'], 'post' => null];
+    }
+
+    foreach ($postsResult['posts'] as $post) {
+        $post = wps_apply_post_override($post);
+        if (($post['base_slug'] ?? '') === $requestedSlug || ($post['public_slug'] ?? '') === $requestedSlug) {
+            return ['ok' => true, 'error' => '', 'post' => $post];
+        }
+    }
+
+    return ['ok' => false, 'error' => 'Post not found.', 'post' => null];
 }
