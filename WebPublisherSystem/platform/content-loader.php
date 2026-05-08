@@ -158,72 +158,9 @@ function wps_get_post_content(array $settings, array $post): array
     ];
 }
 
+require_once __DIR__ . '/markdown.php';
+
 function wps_markdown_to_html(string $markdown): string
 {
-    $lines = preg_split('/\r\n|\r|\n/', $markdown);
-    $html = '';
-    $paragraph = [];
-    $inList = false;
-
-    $flushParagraph = function () use (&$html, &$paragraph): void {
-        if (!$paragraph) {
-            return;
-        }
-        $text = implode(' ', $paragraph);
-        $html .= '<p>' . wps_inline_markdown($text) . '</p>' . "\n";
-        $paragraph = [];
-    };
-
-    $closeList = function () use (&$html, &$inList): void {
-        if ($inList) {
-            $html .= "</ul>\n";
-            $inList = false;
-        }
-    };
-
-    foreach ($lines as $line) {
-        $trim = trim($line);
-
-        if ($trim === '') {
-            $flushParagraph();
-            $closeList();
-            continue;
-        }
-
-        if (preg_match('/^(#{1,6})\s+(.+)$/', $trim, $matches)) {
-            $flushParagraph();
-            $closeList();
-            $level = min(strlen($matches[1]), 4);
-            $text = wps_inline_markdown($matches[2]);
-            $html .= '<h' . $level . '>' . $text . '</h' . $level . '>' . "\n";
-            continue;
-        }
-
-        if (preg_match('/^-\s+(.+)$/', $trim, $matches)) {
-            $flushParagraph();
-            if (!$inList) {
-                $html .= "<ul>\n";
-                $inList = true;
-            }
-            $html .= '<li>' . wps_inline_markdown($matches[1]) . '</li>' . "\n";
-            continue;
-        }
-
-        $paragraph[] = $trim;
-    }
-
-    $flushParagraph();
-    $closeList();
-
-    return $html;
-}
-
-function wps_inline_markdown(string $text): string
-{
-    $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-    $escaped = preg_replace('/`([^`]+)`/', '<code>$1</code>', $escaped);
-    $escaped = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $escaped);
-    $escaped = preg_replace('/\[([^\]]+)\]\(([^\)]+)\)/', '<a href="$2">$1</a>', $escaped);
-
-    return $escaped;
+    return wps_render_markdown($markdown);
 }
