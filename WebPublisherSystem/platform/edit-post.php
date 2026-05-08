@@ -1,0 +1,148 @@
+<?php
+const WPS_ASSET_BASE = '.';
+const WPS_SETTINGS_URL = 'settings.php';
+
+require_once __DIR__ . '/content-loader.php';
+require_once __DIR__ . '/post-overrides.php';
+
+$settings = wps_load_settings();
+$slug = trim($_GET['slug'] ?? $_POST['slug'] ?? '');
+$error = '';
+$success = '';
+
+$postResult = $slug ? wps_find_post_by_slug($settings, $slug) : ['ok' => false, 'error' => 'Missing post slug.', 'post' => null];
+$post = $postResult['post'] ?? null;
+
+if ($post) {
+    $post = wps_apply_post_override($post);
+}
+
+function wps_edit_get_file_value(array $post, string $fileName): string
+{
+    $folderPath = $post['folder_path'] ?? '';
+    if (!$folderPath) {
+        return '';
+    }
+
+    $file = wps_read_local_file($folderPath . '/' . $fileName);
+    return $file['ok'] ? (string) $file['content'] : '';
+}
+
+$override = $post ? wps_load_post_override((string) ($post['slug'] ?? '')) : [];
+$editValues = [
+    'title' => $post['title'] ?? '',
+    'meta_description' => $post['meta_description'] ?? '',
+    'primary_keyword' => $post['primary_keyword'] ?? '',
+    'funnel_stage' => $post['funnel_stage'] ?? '',
+    'product_reference_code' => $post['product_reference_code'] ?? '',
+    'blog_content' => $override['blog_content'] ?? ($post ? wps_edit_get_file_value($post, 'blog-post.md') : ''),
+    'faq_content' => $override['faq_content'] ?? ($post ? wps_edit_get_file_value($post, 'faq.md') : ''),
+];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $post) {
+    $saveData = [
+        'title' => trim((string) ($_POST['title'] ?? '')),
+        'meta_description' => trim((string) ($_POST['meta_description'] ?? '')),
+        'primary_keyword' => trim((string) ($_POST['primary_keyword'] ?? '')),
+        'funnel_stage' => trim((string) ($_POST['funnel_stage'] ?? '')),
+        'product_reference_code' => trim((string) ($_POST['product_reference_code'] ?? '')),
+        'blog_content' => (string) ($_POST['blog_content'] ?? ''),
+        'faq_content' => (string) ($_POST['faq_content'] ?? ''),
+    ];
+
+    if ($saveData['title'] === '') {
+        $error = 'Title is required.';
+    } elseif ($saveData['blog_content'] === '') {
+        $error = 'Blog content is required.';
+    } elseif (wps_save_post_override((string) $post['slug'], $saveData)) {
+        $success = 'Blog post changes saved locally.';
+        $post = wps_apply_post_override(array_merge($post, $saveData));
+        $editValues = $saveData;
+    } else {
+        $error = 'Could not save this blog post. Make sure platform/data/ is writable.';
+    }
+}
+
+$pageTitle = $post ? 'Edit: ' . ($post['title'] ?? 'Blog Post') : 'Edit Blog Post';
+wps_render_header($pageTitle);
+?>
+
+<?php if (!$postResult['ok'] || !$post): ?>
+    <section class="panel">
+        <h1>Post not found</h1>
+        <div class="alert alert-error"><?php echo wps_h($postResult['error'] ?? 'Post not found.'); ?></div>
+        <a class="button-secondary" href="<?php echo wps_h(wps_archive_url()); ?>">Back to Blog Archive</a>
+    </section>
+<?php else: ?>
+    <section class="panel">
+        <p class="eyebrow">Single blog editor</p>
+        <h1>Edit Blog Post</h1>
+        <p class="muted">These edits are saved locally only for this blog post. They do not change other posts and do not modify the original generated markdown files in GitHub.</p>
+
+        <?php if ($error): ?>
+            <div class="alert alert-error"><?php echo wps_h($error); ?></div>
+        <?php endif; ?>
+
+        <?php if ($success): ?>
+            <div class="alert alert-success"><?php echo wps_h($success); ?></div>
+        <?php endif; ?>
+
+        <div class="post-meta">
+            <span>Slug: <?php echo wps_h($post['slug']); ?></span>
+            <?php if (!empty($post['has_local_edits']) || $success): ?>
+                <span>Local edits active</span>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <section class="panel">
+        <form method="post" class="form edit-post-form">
+            <input type="hidden" name="slug" value="<?php echo wps_h($post['slug']); ?>">
+
+            <label>
+                Page title
+                <input type="text" name="title" value="<?php echo wps_h($editValues['title']); ?>" required>
+            </label>
+
+            <label>
+                Meta description / archive excerpt
+                <textarea name="meta_description" rows="3"><?php echo wps_h($editValues['meta_description']); ?></textarea>
+            </label>
+
+            <div class="grid-form compact-grid">
+                <label>
+                    Primary keyword
+                    <input type="text" name="primary_keyword" value="<?php echo wps_h($editValues['primary_keyword']); ?>">
+                </label>
+
+                <label>
+                    Funnel stage / label
+                    <input type="text" name="funnel_stage" value="<?php echo wps_h($editValues['funnel_stage']); ?>">
+                </label>
+
+                <label>
+                    Product reference code
+                    <input type="text" name="product_reference_code" value="<?php echo wps_h($editValues['product_reference_code']); ?>">
+                </label>
+            </div>
+
+            <label>
+                Blog content markdown
+                <textarea name="blog_content" rows="22" required><?php echo wps_h($editValues['blog_content']); ?></textarea>
+            </label>
+
+            <label>
+                FAQ markdown
+                <textarea name="faq_content" rows="12"><?php echo wps_h($editValues['faq_content']); ?></textarea>
+            </label>
+
+            <div class="actions">
+                <button type="submit">Save This Blog Post</button>
+                <a class="button-secondary" href="../blog/post.php?slug=<?php echo urlencode($post['slug']); ?>">View Post</a>
+                <a class="button-secondary" href="<?php echo wps_h(wps_archive_url()); ?>">Back to Archive</a>
+            </div>
+        </form>
+    </section>
+<?php endif; ?>
+
+<?php wps_render_footer(); ?>
