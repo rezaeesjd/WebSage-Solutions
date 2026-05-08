@@ -6,16 +6,12 @@ require_once __DIR__ . '/content-loader.php';
 require_once __DIR__ . '/post-overrides.php';
 
 $settings = wps_load_settings();
-$slug = trim($_GET['slug'] ?? $_POST['slug'] ?? '');
+$slug = trim($_GET['slug'] ?? $_POST['base_slug'] ?? '');
 $error = '';
 $success = '';
 
-$postResult = $slug ? wps_find_post_by_slug($settings, $slug) : ['ok' => false, 'error' => 'Missing post slug.', 'post' => null];
+$postResult = $slug ? wps_find_post_by_public_or_base_slug($settings, $slug) : ['ok' => false, 'error' => 'Missing post slug.', 'post' => null];
 $post = $postResult['post'] ?? null;
-
-if ($post) {
-    $post = wps_apply_post_override($post);
-}
 
 function wps_edit_get_file_value(array $post, string $fileName): string
 {
@@ -28,8 +24,11 @@ function wps_edit_get_file_value(array $post, string $fileName): string
     return $file['ok'] ? (string) $file['content'] : '';
 }
 
-$override = $post ? wps_load_post_override((string) ($post['slug'] ?? '')) : [];
+$baseSlug = $post ? (string) ($post['base_slug'] ?? $post['slug'] ?? '') : '';
+$publicSlug = $post ? (string) ($post['public_slug'] ?? $baseSlug) : '';
+$override = $post ? wps_load_post_override($baseSlug) : [];
 $editValues = [
+    'public_slug' => $override['public_slug'] ?? $publicSlug,
     'title' => $post['title'] ?? '',
     'meta_description' => $post['meta_description'] ?? '',
     'primary_keyword' => $post['primary_keyword'] ?? '',
@@ -40,7 +39,9 @@ $editValues = [
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $post) {
+    $submittedPublicSlug = wps_post_safe_slug((string) ($_POST['public_slug'] ?? ''));
     $saveData = [
+        'public_slug' => $submittedPublicSlug !== '' ? $submittedPublicSlug : $baseSlug,
         'title' => trim((string) ($_POST['title'] ?? '')),
         'meta_description' => trim((string) ($_POST['meta_description'] ?? '')),
         'primary_keyword' => trim((string) ($_POST['primary_keyword'] ?? '')),
@@ -54,9 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $post) {
         $error = 'Title is required.';
     } elseif ($saveData['blog_content'] === '') {
         $error = 'Blog content is required.';
-    } elseif (wps_save_post_override((string) $post['slug'], $saveData)) {
+    } elseif (wps_save_post_override($baseSlug, $saveData)) {
         $success = 'Blog post changes saved locally.';
         $post = wps_apply_post_override(array_merge($post, $saveData));
+        $baseSlug = (string) ($post['base_slug'] ?? $baseSlug);
+        $publicSlug = (string) ($post['public_slug'] ?? $saveData['public_slug']);
         $editValues = $saveData;
     } else {
         $error = 'Could not save this blog post. Make sure platform/data/ is writable.';
@@ -88,7 +91,8 @@ wps_render_header($pageTitle);
         <?php endif; ?>
 
         <div class="post-meta">
-            <span>Slug: <?php echo wps_h($post['slug']); ?></span>
+            <span>Base slug: <?php echo wps_h($baseSlug); ?></span>
+            <span>Public slug: <?php echo wps_h($publicSlug); ?></span>
             <?php if (!empty($post['has_local_edits']) || $success): ?>
                 <span>Local edits active</span>
             <?php endif; ?>
@@ -97,7 +101,13 @@ wps_render_header($pageTitle);
 
     <section class="panel">
         <form method="post" class="form edit-post-form">
-            <input type="hidden" name="slug" value="<?php echo wps_h($post['slug']); ?>">
+            <input type="hidden" name="base_slug" value="<?php echo wps_h($baseSlug); ?>">
+
+            <label>
+                Public URL slug
+                <input type="text" name="public_slug" value="<?php echo wps_h($editValues['public_slug']); ?>" pattern="[a-zA-Z0-9_-]+" required>
+                <small>This changes the public single-post URL only. It does not rename any server folder or source content folder.</small>
+            </label>
 
             <label>
                 Page title
@@ -138,7 +148,7 @@ wps_render_header($pageTitle);
 
             <div class="actions">
                 <button type="submit">Save This Blog Post</button>
-                <a class="button-secondary" href="../blog/post.php?slug=<?php echo urlencode($post['slug']); ?>">View Post</a>
+                <a class="button-secondary" href="../blog/post.php?slug=<?php echo urlencode($publicSlug); ?>">View Post</a>
                 <a class="button-secondary" href="<?php echo wps_h(wps_archive_url()); ?>">Back to Archive</a>
             </div>
         </form>
