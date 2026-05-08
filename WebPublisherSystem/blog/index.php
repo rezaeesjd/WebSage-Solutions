@@ -3,10 +3,14 @@ const WPS_ASSET_BASE = '../platform';
 const WPS_SETTINGS_URL = '../platform/settings.php';
 
 require_once __DIR__ . '/../platform/content-loader.php';
+require_once __DIR__ . '/../platform/post-overrides.php';
 
 $settings = wps_load_settings();
 wps_redirect_legacy_blog_path_if_needed($settings);
 $postsResult = wps_get_posts($settings);
+if ($postsResult['ok'] && !empty($postsResult['posts'])) {
+    $postsResult['posts'] = array_map('wps_apply_post_override', $postsResult['posts']);
+}
 
 wps_render_header($settings['archive_title']);
 ?>
@@ -65,8 +69,14 @@ wps_render_header($settings['archive_title']);
                         <?php if (!empty($post['product_reference_code'])): ?>
                             <span>Ref <?php echo wps_h($post['product_reference_code']); ?></span>
                         <?php endif; ?>
+                        <?php if (!empty($post['has_local_edits'])): ?>
+                            <span>Edited</span>
+                        <?php endif; ?>
                     </div>
-                    <a class="read-more" href="post.php?slug=<?php echo urlencode($post['slug']); ?>">Read guide →</a>
+                    <div class="card-actions">
+                        <a class="read-more" href="post.php?slug=<?php echo urlencode($post['slug']); ?>">Read guide →</a>
+                        <a class="edit-link" href="../platform/edit-post.php?slug=<?php echo urlencode($post['slug']); ?>">Edit</a>
+                    </div>
                 </article>
             <?php endforeach; ?>
         </div>
