@@ -12,7 +12,24 @@ $results = [];
 $error = '';
 $success = '';
 
-function wps_sync_should_skip(string $repoPath): bool
+function wps_sync_should_skip_local(string $relativePath): bool
+{
+    $normalized = trim(str_replace('\\', '/', $relativePath), '/');
+
+    $skipPrefixes = [
+        'platform/data',
+    ];
+
+    foreach ($skipPrefixes as $prefix) {
+        if ($normalized === $prefix || str_starts_with($normalized, $prefix . '/')) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function wps_sync_should_skip_repo(string $repoPath): bool
 {
     $normalized = trim(str_replace('\\', '/', $repoPath), '/');
 
@@ -39,11 +56,11 @@ function wps_sync_relative_path(string $repoPath): string
     return $repoPath;
 }
 
-function wps_sync_download_raw(string $url): array
+function wps_sync_download_binary(string $url): array
 {
     $headers = [
         'User-Agent: WebPublisherSystem',
-        'Accept: application/vnd.github.raw',
+        'Accept: application/octet-stream',
     ];
 
     if (function_exists('curl_init')) {
@@ -51,7 +68,7 @@ function wps_sync_download_raw(string $url): array
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_TIMEOUT => 30,
+            CURLOPT_TIMEOUT => 60,
             CURLOPT_FOLLOWLOCATION => true,
         ]);
         $body = curl_exec($ch);
@@ -60,11 +77,11 @@ function wps_sync_download_raw(string $url): array
         curl_close($ch);
 
         if ($body === false || $error) {
-            return ['ok' => false, 'body' => '', 'error' => $error ?: 'Raw download failed.', 'status' => $httpCode];
+            return ['ok' => false, 'body' => '', 'error' => $error ?: 'Download failed.', 'status' => $httpCode];
         }
 
         if ($httpCode < 200 || $httpCode >= 300) {
-            return ['ok' => false, 'body' => '', 'error' => 'Raw download returned HTTP ' . $httpCode, 'status' => $httpCode];
+            return ['ok' => false, 'body' => '', 'error' => 'Download returned HTTP ' . $httpCode, 'status' => $httpCode];
         }
 
         return ['ok' => true, 'body' => $body, 'error' => '', 'status' => $httpCode];
@@ -74,76 +91,182 @@ function wps_sync_download_raw(string $url): array
         'http' => [
             'method' => 'GET',
             'header' => implode("\r\n", $headers),
-            'timeout' => 30,
+            'timeout' => 60,
         ],
     ]);
 
     $body = @file_get_contents($url, false, $context);
     if ($body === false) {
-        return ['ok' => false, 'body' => '', 'error' => 'Raw download failed. cURL is unavailable and file_get_contents could not fetch the URL.', 'status' => 0];
+        return ['ok' => false, 'body' => '', 'error' => 'Download failed. cURL is unavailable and file_get_contents could not fetch the URL.', 'status' => 0];
     }
 
     return ['ok' => true, 'body' => $body, 'error' => '', 'status' => 200];
 }
 
-
-function wps_sync_via_git(array $settings, string $localRoot, array &$results): bool
+function wps_sync_download_raw(string $url): array
 {
-    if (!function_exists('shell_exec')) {
-        $results[] = ['status' => 'error', 'path' => 'git', 'message' => 'shell_exec is disabled, cannot run git-based sync.'];
+    $result = wps_sync_download_binary($url);
+    return [
+        'ok' => $result['ok'],
+        'body' => $result['body'],
+        'error' => $result['error'],
+        'status' => $result['status'],
+    ];
+}
+
+function wps_sync_write_local_file(string $localRoot, string $relativePath, string $content, array &$results): void
+{
+    $relativePath = trim(str_replace('\\', '/', $relativePath), '/');
+
+    if ($relativePath === '' || wps_sync_should_skip_local($relativePath)) {
+        $results[] = ['status' => 'skipped', 'path' => $relativePath ?: '(empty)', 'message' => 'Runtime or invalid path skipped.'];
+        return;
+    }
+
+    $targetPath = $localRoot . '/' . $relativePath;
+    $targetDir = dirname($targetPath);
+    $realLocalRoot = realpath($localRoot);
+
+    if ($realLocalRoot === false) {
+        $results[] = ['status' => 'error', 'path' => $relativePath, 'message' => 'Could not resolve local root.'];
+        return;
+    }
+
+    if (!is_dir($targetDir) && !mkdir($targetDir, 0755, true) && !is_dir($targetDir)) {
+        $results[] = ['status' => 'error', 'path' => $relativePath, 'message' => 'Could not create local directory.'];
+        return;
+    }
+
+    $realTargetDir = realpath($targetDir);
+    if ($realTargetDir === false) {
+        $results[] = ['status' => 'error', 'path' => $relativePath, 'message' => 'Could not resolve target directory.'];
+        return;
+    }
+
+    $rootPrefix = rtrim(str_replace('\\', '/', $realLocalRoot), '/') . '/';
+    $targetPrefix = rtrim(str_replace('\\', '/', $realTargetDir), '/') . '/';
+    if (!str_starts_with($targetPrefix, $rootPrefix)) {
+        $results[] = ['status' => 'error', 'path' => $relativePath, 'message' => 'Unsafe local path blocked.'];
+        return;
+    }
+
+    $existing = file_exists($targetPath) ? file_get_contents($targetPath) : null;
+    if ($existing === $content) {
+        $results[] = ['status' => 'unchanged', 'path' => $relativePath, 'message' => 'Already up to date.'];
+        return;
+    }
+
+    if (file_put_contents($targetPath, $content) === false) {
+        $results[] = ['status' => 'error', 'path' => $relativePath, 'message' => 'Could not write local file. Check permissions.'];
+        return;
+    }
+
+    $results[] = ['status' => $existing === null ? 'created' : 'updated', 'path' => $relativePath, 'message' => 'Synced from GitHub.'];
+}
+
+function wps_sync_via_zip(array $settings, string $localRoot, array &$results): bool
+{
+    if (!class_exists('ZipArchive')) {
+        $results[] = ['status' => 'error', 'path' => 'zip', 'message' => 'PHP ZipArchive is unavailable. Falling back to API sync.'];
         return false;
     }
 
     $owner = trim((string) ($settings['github_owner'] ?? ''));
     $repo = trim((string) ($settings['github_repo'] ?? ''));
     $branch = trim((string) ($settings['github_branch'] ?? 'main'));
-    if ($owner === '' || $repo === '') {
-        $results[] = ['status' => 'error', 'path' => 'git', 'message' => 'Missing GitHub owner/repo settings.'];
+
+    if ($owner === '' || $repo === '' || $branch === '') {
+        $results[] = ['status' => 'error', 'path' => 'zip', 'message' => 'Missing GitHub owner/repo/branch settings.'];
         return false;
     }
 
-    $tmpDir = sys_get_temp_dir() . '/wps-sync-' . bin2hex(random_bytes(6));
-    $repoUrl = 'https://github.com/' . rawurlencode($owner) . '/' . rawurlencode($repo) . '.git';
-    @mkdir($tmpDir, 0700, true);
+    $zipUrl = 'https://codeload.github.com/' . rawurlencode($owner) . '/' . rawurlencode($repo) . '/zip/refs/heads/' . rawurlencode($branch);
+    $download = wps_sync_download_binary($zipUrl);
 
-    $cloneCmd = 'git clone --depth 1 --branch ' . escapeshellarg($branch) . ' ' . escapeshellarg($repoUrl) . ' ' . escapeshellarg($tmpDir) . ' 2>&1';
-    $cloneOut = shell_exec($cloneCmd);
-    if (!is_dir($tmpDir . '/.git')) {
-        $results[] = ['status' => 'error', 'path' => 'git clone', 'message' => trim((string) $cloneOut) ?: 'git clone failed.'];
+    if (!$download['ok']) {
+        $results[] = ['status' => 'error', 'path' => 'zip download', 'message' => $download['error']];
         return false;
     }
 
-    $sourcePath = $tmpDir . '/WebPublisherSystem';
-    if (!is_dir($sourcePath)) {
-        $results[] = ['status' => 'error', 'path' => 'WebPublisherSystem', 'message' => 'WebPublisherSystem folder not found in repository root.'];
-        shell_exec('rm -rf ' . escapeshellarg($tmpDir));
+    $zipPath = tempnam(sys_get_temp_dir(), 'wps-sync-');
+    if ($zipPath === false || file_put_contents($zipPath, $download['body']) === false) {
+        $results[] = ['status' => 'error', 'path' => 'zip', 'message' => 'Could not write temporary zip file.'];
         return false;
     }
 
-    $rsyncCmd = 'rsync -a --delete --exclude platform/data/ --exclude .git/ ' . escapeshellarg($sourcePath . '/') . ' ' . escapeshellarg($localRoot . '/');
-    $rsyncOutput = [];
-    $rsyncCode = 0;
-    exec($rsyncCmd . ' 2>&1', $rsyncOutput, $rsyncCode);
-    $rsyncOut = trim(implode("\n", $rsyncOutput));
-
-    if ($rsyncCode !== 0) {
-        $results[] = ['status' => 'error', 'path' => 'rsync', 'message' => $rsyncOut ?: 'rsync failed.'];
-        shell_exec('rm -rf ' . escapeshellarg($tmpDir));
+    $zip = new ZipArchive();
+    if ($zip->open($zipPath) !== true) {
+        @unlink($zipPath);
+        $results[] = ['status' => 'error', 'path' => 'zip', 'message' => 'Could not open downloaded zip file.'];
         return false;
     }
 
-    $results[] = ['status' => 'updated', 'path' => 'WebPublisherSystem/*', 'message' => 'Synced via git clone + rsync (platform/data preserved).'];
-    if ($rsyncOut !== '') {
-        $results[] = ['status' => 'info', 'path' => 'rsync', 'message' => $rsyncOut];
+    $synced = 0;
+    $sourcePrefixMarker = '/WebPublisherSystem/';
+
+    for ($i = 0; $i < $zip->numFiles; $i++) {
+        $entryName = str_replace('\\', '/', $zip->getNameIndex($i));
+
+        if (str_ends_with($entryName, '/')) {
+            continue;
+        }
+
+        $pos = strpos($entryName, $sourcePrefixMarker);
+        if ($pos === false) {
+            continue;
+        }
+
+        $relativePath = substr($entryName, $pos + strlen($sourcePrefixMarker));
+        if ($relativePath === '' || wps_sync_should_skip_local($relativePath)) {
+            continue;
+        }
+
+        $content = $zip->getFromIndex($i);
+        if ($content === false) {
+            $results[] = ['status' => 'error', 'path' => $relativePath, 'message' => 'Could not read file from zip.'];
+            continue;
+        }
+
+        wps_sync_write_local_file($localRoot, $relativePath, $content, $results);
+        $synced++;
     }
 
-    shell_exec('rm -rf ' . escapeshellarg($tmpDir));
+    $zip->close();
+    @unlink($zipPath);
+
+    if ($synced === 0) {
+        $results[] = ['status' => 'error', 'path' => 'zip', 'message' => 'No WebPublisherSystem files found in the downloaded zip.'];
+        return false;
+    }
+
+    $results[] = ['status' => 'updated', 'path' => 'WebPublisherSystem/*', 'message' => 'Zip sync completed without deleting local custom folders.'];
     return true;
+}
+
+function wps_sync_recreate_archive_alias(array $settings, array &$results): void
+{
+    $slug = wps_archive_slug_from_setting($settings);
+    wps_ensure_archive_alias($settings);
+
+    if ($slug === 'blog') {
+        $results[] = ['status' => 'unchanged', 'path' => 'blog/', 'message' => 'Default archive path is part of the system package.'];
+        return;
+    }
+
+    $root = realpath(__DIR__ . '/..');
+    $aliasIndex = $root ? $root . '/' . $slug . '/index.php' : '';
+    $aliasPost = $root ? $root . '/' . $slug . '/post.php' : '';
+
+    if ($aliasIndex && is_file($aliasIndex) && is_file($aliasPost)) {
+        $results[] = ['status' => 'updated', 'path' => $slug . '/', 'message' => 'Saved archive alias recreated after sync.'];
+    } else {
+        $results[] = ['status' => 'error', 'path' => $slug . '/', 'message' => 'Could not recreate saved archive alias. Check folder permissions.'];
+    }
 }
 
 function wps_sync_path(array $settings, string $repoPath, string $localRoot, array &$results): void
 {
-    if (wps_sync_should_skip($repoPath)) {
+    if (wps_sync_should_skip_repo($repoPath)) {
         $results[] = ['status' => 'skipped', 'path' => $repoPath, 'message' => 'Runtime data path skipped.'];
         return;
     }
@@ -157,7 +280,6 @@ function wps_sync_path(array $settings, string $repoPath, string $localRoot, arr
     }
 
     $items = $response['data'];
-
     if (isset($items['type'])) {
         $items = [$items];
     }
@@ -174,7 +296,7 @@ function wps_sync_path(array $settings, string $repoPath, string $localRoot, arr
 
         $path = $item['path'];
 
-        if (wps_sync_should_skip($path)) {
+        if (wps_sync_should_skip_repo($path)) {
             $results[] = ['status' => 'skipped', 'path' => $path, 'message' => 'Runtime data path skipped.'];
             continue;
         }
@@ -190,33 +312,6 @@ function wps_sync_path(array $settings, string $repoPath, string $localRoot, arr
         }
 
         $relativePath = wps_sync_relative_path($path);
-        $targetPath = $localRoot . '/' . $relativePath;
-        $targetDir = dirname($targetPath);
-
-        $realLocalRoot = realpath($localRoot);
-        $realTargetDir = realpath($targetDir);
-
-        if ($realTargetDir === false) {
-            if (!mkdir($targetDir, 0755, true) && !is_dir($targetDir)) {
-                $results[] = ['status' => 'error', 'path' => $path, 'message' => 'Could not create local directory.'];
-                continue;
-            }
-            $realTargetDir = realpath($targetDir);
-        }
-
-        if ($realLocalRoot === false || $realTargetDir === false) {
-            $results[] = ['status' => 'error', 'path' => $path, 'message' => 'Unsafe local path blocked.'];
-            continue;
-        }
-
-        $rootPrefix = rtrim(str_replace('\\', '/', $realLocalRoot), '/') . '/';
-        $targetPrefix = rtrim(str_replace('\\', '/', $realTargetDir), '/') . '/';
-
-        if (!str_starts_with($targetPrefix, $rootPrefix)) {
-            $results[] = ['status' => 'error', 'path' => $path, 'message' => 'Unsafe local path blocked.'];
-            continue;
-        }
-
         $downloadUrl = $item['download_url'] ?? '';
         if (!$downloadUrl) {
             $results[] = ['status' => 'error', 'path' => $path, 'message' => 'Missing GitHub download URL.'];
@@ -229,18 +324,7 @@ function wps_sync_path(array $settings, string $repoPath, string $localRoot, arr
             continue;
         }
 
-        $existing = file_exists($targetPath) ? file_get_contents($targetPath) : null;
-        if ($existing === $download['body']) {
-            $results[] = ['status' => 'unchanged', 'path' => $relativePath, 'message' => 'Already up to date.'];
-            continue;
-        }
-
-        if (file_put_contents($targetPath, $download['body']) === false) {
-            $results[] = ['status' => 'error', 'path' => $relativePath, 'message' => 'Could not write local file. Check permissions.'];
-            continue;
-        }
-
-        $results[] = ['status' => $existing === null ? 'created' : 'updated', 'path' => $relativePath, 'message' => 'Synced from GitHub.'];
+        wps_sync_write_local_file($localRoot, $relativePath, $download['body'], $results);
     }
 }
 
@@ -248,10 +332,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$localRoot) {
         $error = 'Could not resolve local WebPublisherSystem root folder.';
     } else {
-        $gitSynced = wps_sync_via_git($settings, $localRoot, $results);
-        if (!$gitSynced) {
+        $zipSynced = wps_sync_via_zip($settings, $localRoot, $results);
+        if (!$zipSynced) {
             wps_sync_path($settings, $repoRootPath, $localRoot, $results);
         }
+        $settings = wps_load_settings();
+        wps_sync_recreate_archive_alias($settings, $results);
         $errors = array_filter($results, fn($item) => $item['status'] === 'error');
         $success = empty($errors)
             ? 'System sync completed successfully.'
@@ -264,7 +350,7 @@ wps_render_header('System Sync');
 
 <section class="panel">
     <h1>Sync WebPublisherSystem from GitHub</h1>
-    <p class="muted">This first tries a <strong>git clone + rsync</strong> sync (to avoid GitHub API rate limits), then automatically falls back to GitHub API sync if git sync is unavailable. Runtime settings in <code>platform/data/</code> are always skipped so your saved settings are not overwritten.</p>
+    <p class="muted">This updates files from the public GitHub repository using a safe zip-based sync when available, and falls back to GitHub API sync if needed. Runtime settings in <code>platform/data/</code> are always skipped so your saved settings are not overwritten. After sync, the saved archive slug is recreated automatically.</p>
 
     <?php if ($error): ?>
         <div class="alert alert-error"><?php echo wps_h($error); ?></div>
