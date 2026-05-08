@@ -263,14 +263,43 @@ button:hover { background: var(--brand-dark); }
     .panel { padding: 22px; }
     .container { padding: 0 14px; }
     .url-slug-row {
-        grid-template-columns: minmax(0, 1fr) minmax(90px, 38%) auto;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        border: none;
+        border-radius: 0;
+        overflow: visible;
+        background: transparent;
+        row-gap: 0;
     }
     .url-slug-prefix {
-        font-size: 14px;
-        padding: 0 8px;
+        grid-column: 1 / -1;
+        display: block;
+        width: 100%;
+        border: 1px solid var(--border);
+        border-bottom: none;
+        border-radius: 10px 10px 0 0;
+        background: #f3f6fb;
+        font-size: 13px;
+        line-height: 1.35;
+        padding: 10px 12px;
+        overflow: visible;
+        text-overflow: unset;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    .url-slug-row input {
+        border: 1px solid var(--border);
+        border-radius: 0 0 0 10px;
+        min-height: 48px;
+        background: #fff;
     }
     .url-slug-suffix {
-        padding: 0 8px;
+        border: 1px solid var(--border);
+        border-left: none;
+        border-radius: 0 0 10px 0;
+        background: #fff;
+        min-height: 48px;
+        padding: 0 12px;
     }
     .button-secondary,
     button {
