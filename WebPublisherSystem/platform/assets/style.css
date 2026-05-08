@@ -51,7 +51,29 @@ code { background: #eef3f8; padding: 2px 6px; border-radius: 6px; }
     color: var(--text);
 }
 
-nav { display: flex; gap: 16px; flex-wrap: wrap; }
+nav { display: flex; gap: 10px; flex-wrap: wrap; }
+nav a {
+    color: var(--muted);
+    font-weight: 700;
+    padding: 8px 12px;
+    border-radius: 999px;
+}
+nav a:hover {
+    background: #edf5ff;
+    color: var(--brand);
+    text-decoration: none;
+}
+nav a.active,
+nav a[aria-current="page"] {
+    background: var(--brand);
+    color: #fff;
+    font-weight: 800;
+}
+nav a.active:hover,
+nav a[aria-current="page"]:hover {
+    background: var(--brand-dark);
+    color: #fff;
+}
 main.container { padding-top: 28px; padding-bottom: 40px; }
 
 .panel {
