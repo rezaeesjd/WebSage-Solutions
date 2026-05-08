@@ -241,17 +241,12 @@ function wps_settings_url(): string
 function wps_current_nav_item(): string
 {
     $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
-    $basename = basename($scriptName);
 
-    if (str_contains($scriptName, '/platform/') && $basename === 'settings.php') {
+    if (str_contains($scriptName, '/platform/')) {
         return 'settings';
     }
 
-    if (str_contains($scriptName, '/blog/') || $basename === 'post.php') {
-        return 'archive';
-    }
-
-    return '';
+    return 'archive';
 }
 
 function wps_render_header(string $title): void
