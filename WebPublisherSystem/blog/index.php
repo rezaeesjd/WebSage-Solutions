@@ -2,9 +2,11 @@
 const WPS_ASSET_BASE = '../platform';
 const WPS_SETTINGS_URL = '../platform/settings.php';
 
+require_once __DIR__ . '/../platform/auth.php';
 require_once __DIR__ . '/../platform/content-loader.php';
 require_once __DIR__ . '/../platform/post-overrides.php';
 
+$adminSignedIn = wps_is_logged_in();
 $settings = wps_load_settings();
 wps_redirect_legacy_blog_path_if_needed($settings);
 $postsResult = wps_get_posts($settings);
@@ -79,7 +81,9 @@ wps_render_header($settings['archive_title']);
                     </div>
                     <div class="card-actions">
                         <a class="read-more" href="post.php?slug=<?php echo urlencode($publicSlug); ?>">Read guide →</a>
-                        <a class="edit-link" href="../platform/edit-post.php?slug=<?php echo urlencode($baseSlug); ?>">Edit</a>
+                        <?php if ($adminSignedIn): ?>
+                            <a class="edit-link" href="../platform/edit-post.php?slug=<?php echo urlencode($baseSlug); ?>">Edit</a>
+                        <?php endif; ?>
                     </div>
                 </article>
             <?php endforeach; ?>

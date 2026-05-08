@@ -2,8 +2,10 @@
 const WPS_ASSET_BASE = '.';
 const WPS_SETTINGS_URL = 'settings.php';
 
-require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/github.php';
+
+wps_require_auth();
 
 $settings = wps_load_settings();
 $repoRootPath = 'WebPublisherSystem';
@@ -243,6 +245,88 @@ function wps_sync_via_zip(array $settings, string $localRoot, array &$results): 
     return true;
 }
 
+/**
+ * After sync, do a HEAD on every public post URL to confirm it's reachable.
+ * Reports any 404/non-2xx as an error so the operator notices broken posts
+ * before declaring sync successful.
+ */
+function wps_sync_live_verify(array $settings, array &$results): void
+{
+    if (!function_exists('wps_get_posts')) {
+        require_once __DIR__ . '/content-loader.php';
+        require_once __DIR__ . '/post-overrides.php';
+    }
+
+    $postsResult = wps_get_posts($settings);
+    if (!$postsResult['ok']) {
+        $results[] = ['status' => 'skipped', 'path' => 'live-verify', 'message' => 'No posts to verify: ' . $postsResult['error']];
+        return;
+    }
+
+    $base = rtrim(wps_archive_url(), '/');
+    $checked = 0;
+    foreach ($postsResult['posts'] as $post) {
+        $applied = wps_apply_post_override($post);
+        $publicSlug = (string) ($applied['public_slug'] ?? $applied['base_slug'] ?? '');
+        if ($publicSlug === '') {
+            continue;
+        }
+
+        $url = $base . '/post.php?slug=' . rawurlencode($publicSlug);
+        $status = wps_sync_head_request_status($url);
+        $checked++;
+
+        if ($status >= 200 && $status < 400) {
+            $results[] = ['status' => 'unchanged', 'path' => $publicSlug, 'message' => 'Live verify OK (HTTP ' . $status . ').'];
+        } elseif ($status === 0) {
+            $results[] = ['status' => 'skipped', 'path' => $publicSlug, 'message' => 'Live verify could not reach the URL from this host.'];
+        } else {
+            $results[] = ['status' => 'error', 'path' => $publicSlug, 'message' => 'Live verify returned HTTP ' . $status . ' for ' . $url];
+        }
+    }
+
+    if ($checked === 0) {
+        $results[] = ['status' => 'skipped', 'path' => 'live-verify', 'message' => 'No published posts were available to verify.'];
+    }
+}
+
+function wps_sync_head_request_status(string $url): int
+{
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_NOBODY => true,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_USERAGENT => 'WebPublisherSystem/live-verify',
+        ]);
+        curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        return $status;
+    }
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'HEAD',
+            'timeout' => 10,
+            'header' => "User-Agent: WebPublisherSystem/live-verify\r\n",
+            'ignore_errors' => true,
+        ],
+    ]);
+    @file_get_contents($url, false, $context);
+
+    $http_response_header = $http_response_header ?? [];
+    foreach ($http_response_header as $line) {
+        if (preg_match('#HTTP/\S+\s+(\d{3})#', $line, $m)) {
+            return (int) $m[1];
+        }
+    }
+
+    return 0;
+}
+
 function wps_sync_recreate_archive_alias(array $settings, array &$results): void
 {
     $slug = wps_archive_slug_from_setting($settings);
@@ -329,6 +413,8 @@ function wps_sync_path(array $settings, string $repoPath, string $localRoot, arr
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    wps_csrf_validate_or_die();
+
     if (!$localRoot) {
         $error = 'Could not resolve local WebPublisherSystem root folder.';
     } else {
@@ -338,6 +424,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $settings = wps_load_settings();
         wps_sync_recreate_archive_alias($settings, $results);
+        wps_sync_live_verify($settings, $results);
         $errors = array_filter($results, fn($item) => $item['status'] === 'error');
         $success = empty($errors)
             ? 'System sync completed successfully.'
@@ -361,6 +448,7 @@ wps_render_header('System Sync');
     <?php endif; ?>
 
     <form method="post" class="actions">
+        <?php echo wps_csrf_field(); ?>
         <button type="submit">Sync All System Files from GitHub</button>
         <a class="button-secondary" href="settings.php">Back to Settings</a>
         <a class="button-secondary" href="<?php echo wps_h(wps_archive_url()); ?>">View Blog Archive</a>

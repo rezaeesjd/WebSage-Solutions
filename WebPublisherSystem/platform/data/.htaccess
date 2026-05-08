@@ -1,0 +1,9 @@
+# Deny direct web access to the runtime data directory.
+# auth.json, settings.json, and post-overrides/ are server-only.
+Require all denied
+
+# Apache <= 2.2 fallback
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>

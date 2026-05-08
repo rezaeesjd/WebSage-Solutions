@@ -55,10 +55,53 @@ function wps_save_settings(array $settings): bool
     wps_ensure_data_dir();
     $settings['updated_at'] = gmdate('c');
 
-    return file_put_contents(
+    return wps_atomic_write(
         WPS_SETTINGS_FILE,
         json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-    ) !== false;
+    );
+}
+
+/**
+ * Write file contents atomically with an exclusive lock. Writes to a
+ * temp sibling first, fsyncs, then renames into place. Prevents
+ * concurrent writers from corrupting the JSON store.
+ */
+function wps_atomic_write(string $path, string $contents): bool
+{
+    $dir = dirname($path);
+    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+        return false;
+    }
+
+    $tmp = $dir . '/.' . basename($path) . '.' . bin2hex(random_bytes(6)) . '.tmp';
+    $handle = @fopen($tmp, 'wb');
+    if ($handle === false) {
+        return false;
+    }
+
+    if (!flock($handle, LOCK_EX)) {
+        fclose($handle);
+        @unlink($tmp);
+        return false;
+    }
+
+    $written = fwrite($handle, $contents);
+    fflush($handle);
+    flock($handle, LOCK_UN);
+    fclose($handle);
+
+    if ($written === false || $written !== strlen($contents)) {
+        @unlink($tmp);
+        return false;
+    }
+
+    if (!@rename($tmp, $path)) {
+        @unlink($tmp);
+        return false;
+    }
+
+    @chmod($path, 0644);
+    return true;
 }
 
 function wps_h(?string $value): string
@@ -256,6 +299,9 @@ function wps_render_header(string $title): void
     $currentNavItem = wps_current_nav_item();
     $archiveIsActive = $currentNavItem === 'archive';
     $settingsIsActive = $currentNavItem === 'settings';
+    $isAdminContext = $currentNavItem === 'settings';
+    $signedIn = function_exists('wps_is_logged_in') && wps_is_logged_in();
+    $logoutUrl = defined('WPS_ASSET_BASE') && WPS_ASSET_BASE === '.' ? 'logout.php' : '../platform/logout.php';
     ?>
     <!doctype html>
     <html lang="en">
@@ -271,7 +317,12 @@ function wps_render_header(string $title): void
             <a class="brand" href="<?php echo wps_h(wps_archive_url()); ?>"><?php echo wps_h($settings['site_name']); ?></a>
             <nav>
                 <a class="<?php echo $archiveIsActive ? 'active' : ''; ?>" href="<?php echo wps_h(wps_archive_url()); ?>" <?php echo $archiveIsActive ? 'aria-current="page"' : ''; ?>>Archive</a>
-                <a class="<?php echo $settingsIsActive ? 'active' : ''; ?>" href="<?php echo wps_h(wps_settings_url()); ?>" <?php echo $settingsIsActive ? 'aria-current="page"' : ''; ?>>Settings</a>
+                <?php if ($isAdminContext || $signedIn): ?>
+                    <a class="<?php echo $settingsIsActive ? 'active' : ''; ?>" href="<?php echo wps_h(wps_settings_url()); ?>" <?php echo $settingsIsActive ? 'aria-current="page"' : ''; ?>>Settings</a>
+                <?php endif; ?>
+                <?php if ($signedIn): ?>
+                    <a href="<?php echo wps_h($logoutUrl); ?>">Sign out</a>
+                <?php endif; ?>
             </nav>
         </div>
     </header>

@@ -1,6 +1,8 @@
 <?php
-require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/github.php';
+
+wps_require_auth();
 
 $settings = wps_load_settings();
 $connection = wps_test_github_connection($settings);

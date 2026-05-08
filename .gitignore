@@ -10,3 +10,15 @@ yarn-error.log*
 pnpm-debug.log*
 .vscode/
 .env
+
+# WebPublisherSystem runtime data — secrets and per-deploy state.
+# Never commit: each deploy must create its own admin via setup.php.
+WebPublisherSystem/platform/data/auth.json
+WebPublisherSystem/platform/data/auth-attempts.json
+WebPublisherSystem/platform/data/settings.json
+WebPublisherSystem/platform/data/post-overrides/*.json
+WebPublisherSystem/platform/data/backups/
+
+# Vendored Composer artifacts (Phase 3)
+/vendor/
+composer.lock
