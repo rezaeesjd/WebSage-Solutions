@@ -3,9 +3,29 @@
 ## Purpose
 This repository section is used to generate SEO and conversion-focused content for tours, day trips, and local experiences.
 
-The main business goal is to increase direct bookings on the website while still benefiting from OTA visibility on Viator and TripAdvisor.
+WebPublisherSystem is an **Automated SEO & Social Content Marketing Platform**.
+
+The ultimate business goal is **lead generation, customer acquisition, direct bookings, and growth** through content marketing automation.
+
+Technically, it is a **marketing automation platform focused on organic lead generation through content operations**.
+
+The current implementation is blog-first, but the wider platform direction includes reusable SEO content, landing pages, social posts, and multi-channel publishing workflows.
+
+The main immediate business goal is to increase direct bookings on the website while still benefiting from OTA visibility on Viator and TripAdvisor.
 
 The purpose of each post is to move the traveler one step closer to booking. Do not create content only to fill a blog.
+
+## Platform positioning
+When describing the system or generating strategic notes, use this positioning:
+
+- Product category: **Automated SEO & Social Content Marketing Platform**
+- Technical category: **Marketing automation platform**
+- Growth focus: **Organic lead generation through content operations**
+- Business outcomes: **lead generation, customer acquisition, direct bookings, and growth**
+- Current channel focus: **SEO blog publishing**
+- Future channel expansion: landing pages, social media posts, Google Business Profile posts, email content, and multi-channel publishing
+
+Do not describe the system as only a blog tool. The blog workflow is the first execution layer of a broader content marketing automation platform.
 
 ## Brand context
 The brand name is **Milano Adventures**.
@@ -109,6 +129,7 @@ Explain how this template and workflow can be reused weekly or daily, scaled wit
   - 2 informational posts
   - 1 seasonal, FAQ, or support post
 - Only recommend daily posting when there is enough tour inventory, destination breadth, or operational capacity to maintain quality.
+- Tie every strategy recommendation back to lead generation, customer acquisition, bookings, or growth.
 
 ## Funnel rules
 ### TOFU
@@ -230,6 +251,7 @@ Every generated `blog-post.md` must include:
 - Keep paragraphs relatively short and easy to scan.
 - Favor clarity and usefulness over content length.
 - Do not create content simply to publish something. Each section should help the traveler understand, compare, trust, or book the tour.
+- Remember that the content exists to support lead generation, customer acquisition, bookings, and growth.
 
 ## Trust and OTA positioning
 - Encourage direct booking on the website first.
@@ -332,6 +354,7 @@ Must explain:
 - how to scale production with AI assistance
 - how to keep the design and section order consistent
 - how to adapt the same template to similar tour topics
+- how the content supports lead generation, customer acquisition, bookings, and growth
 
 ## Reusability and layout rules
 - Keep structure consistent across all generated posts for easy CMS upload.
@@ -358,6 +381,7 @@ When generating automation notes, include guidance on:
 - scheduling posts and refreshes consistently
 - refreshing high-value pages regularly instead of publishing only new pages
 - preserving human review before publishing factual business details
+- expanding the blog-first system later into landing pages and social media content once the blog workflow is proven
 
 ## Definition of done
 A generation task is complete only when:
@@ -369,3 +393,4 @@ A generation task is complete only when:
 - the conversion checklist is satisfied
 - final internal URLs are not invented; unknown URLs use placeholders or are labeled as suggested future pages
 - the content is ready to paste into the WebPublisherSystem platform with minimal editing
+- the output supports the broader platform goal of organic lead generation through content operations
