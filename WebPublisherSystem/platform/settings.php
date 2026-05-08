@@ -107,15 +107,15 @@ wps_render_header('Settings');
             <textarea name="archive_description" rows="3"><?php echo wps_h($settings['archive_description']); ?></textarea>
         </label>
 
-        <div class="full field-block">
+        <div class="full field-block archive-slug-field">
             <label for="archive_slug">Archive slug</label>
-            <div class="url-control-row">
-                <div class="url-slug-row">
-                    <span class="url-slug-prefix"><?php echo wps_h($archivePrefix); ?></span>
-                    <input id="archive_slug" type="text" name="archive_slug" value="<?php echo wps_h($archiveSlug); ?>" placeholder="blog" pattern="[a-zA-Z0-9_\-/]*">
-                    <span class="url-slug-suffix">/</span>
-                </div>
-                <a class="button-secondary" href="<?php echo wps_h(wps_archive_url()); ?>" target="_blank" rel="noopener">Open Blog Archive</a>
+            <div class="url-slug-row">
+                <span class="url-slug-prefix" title="<?php echo wps_h($archivePrefix); ?>"><?php echo wps_h($archivePrefix); ?></span>
+                <input id="archive_slug" type="text" name="archive_slug" value="<?php echo wps_h($archiveSlug); ?>" placeholder="blog" pattern="[a-zA-Z0-9_\-/]*">
+                <span class="url-slug-suffix">/</span>
+            </div>
+            <div class="archive-url-actions">
+                <a class="button-secondary" href="<?php echo wps_h(wps_archive_url()); ?>" target="_blank" rel="noopener">Open Blog Archive in New Tab</a>
             </div>
             <small>Enter only the slug, for example <code>blog</code>, <code>blogs2</code>, or <code>travel-guides</code>. It will be created inside WebPublisherSystem.</small>
         </div>
