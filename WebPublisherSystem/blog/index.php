@@ -52,10 +52,14 @@ wps_render_header($settings['archive_title']);
     <?php else: ?>
         <div class="post-grid">
             <?php foreach ($postsResult['posts'] as $post): ?>
+                <?php
+                    $publicSlug = $post['public_slug'] ?? $post['slug'];
+                    $baseSlug = $post['base_slug'] ?? $post['slug'];
+                ?>
                 <article class="post-card">
                     <p class="post-label"><?php echo wps_h($post['primary_keyword'] ?: 'Travel guide'); ?></p>
                     <h3>
-                        <a href="post.php?slug=<?php echo urlencode($post['slug']); ?>">
+                        <a href="post.php?slug=<?php echo urlencode($publicSlug); ?>">
                             <?php echo wps_h($post['title']); ?>
                         </a>
                     </h3>
@@ -74,8 +78,8 @@ wps_render_header($settings['archive_title']);
                         <?php endif; ?>
                     </div>
                     <div class="card-actions">
-                        <a class="read-more" href="post.php?slug=<?php echo urlencode($post['slug']); ?>">Read guide →</a>
-                        <a class="edit-link" href="../platform/edit-post.php?slug=<?php echo urlencode($post['slug']); ?>">Edit</a>
+                        <a class="read-more" href="post.php?slug=<?php echo urlencode($publicSlug); ?>">Read guide →</a>
+                        <a class="edit-link" href="../platform/edit-post.php?slug=<?php echo urlencode($baseSlug); ?>">Edit</a>
                     </div>
                 </article>
             <?php endforeach; ?>
