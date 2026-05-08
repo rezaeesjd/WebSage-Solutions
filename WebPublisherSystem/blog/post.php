@@ -11,6 +11,8 @@ $slug = trim($_GET['slug'] ?? '');
 
 $samplePost = [
     'slug' => 'sample-cinque-terre-tour-from-milan',
+    'base_slug' => 'sample-cinque-terre-tour-from-milan',
+    'public_slug' => 'sample-cinque-terre-tour-from-milan',
     'title' => 'Cinque Terre Tour from Milan: Easy Full-Day Coastal Guide',
     'meta_description' => 'Preview how a published Milano Adventures blog post will look with a real archive card, single post layout, CTA section, and FAQ.',
     'primary_keyword' => 'cinque terre tour from milan',
@@ -34,17 +36,13 @@ if ($isSample) {
         'faq' => wps_replace_placeholders($sampleFaq, $settings),
     ];
 } else {
-    $postResult = $slug ? wps_find_post_by_slug($settings, $slug) : ['ok' => false, 'error' => 'Missing post slug.', 'post' => null];
+    $postResult = $slug ? wps_find_post_by_public_or_base_slug($settings, $slug) : ['ok' => false, 'error' => 'Missing post slug.', 'post' => null];
     $post = $postResult['post'] ?? null;
-
-    if ($post) {
-        $post = wps_apply_post_override($post);
-    }
 
     $contentResult = $post ? wps_get_post_content($settings, $post) : ['ok' => false, 'error' => $postResult['error'] ?? 'Post not found.', 'blog' => '', 'faq' => ''];
 
     if ($post && $contentResult['ok']) {
-        $override = wps_load_post_override((string) ($post['slug'] ?? ''));
+        $override = wps_load_post_override((string) ($post['base_slug'] ?? $post['slug'] ?? ''));
         if (array_key_exists('blog_content', $override)) {
             $contentResult['blog'] = wps_replace_placeholders((string) $override['blog_content'], $settings);
         }
@@ -55,6 +53,8 @@ if ($isSample) {
 }
 
 $pageTitle = $post['title'] ?? 'Blog Post';
+$baseSlug = $post['base_slug'] ?? $post['slug'] ?? '';
+$publicSlug = $post['public_slug'] ?? $post['slug'] ?? '';
 wps_render_header($pageTitle);
 ?>
 
@@ -101,7 +101,7 @@ wps_render_header($pageTitle);
     <section class="panel muted-panel">
         <div class="actions">
             <?php if (!$isSample): ?>
-                <a class="button-secondary" href="../platform/edit-post.php?slug=<?php echo urlencode($post['slug']); ?>">Edit This Blog Post</a>
+                <a class="button-secondary" href="../platform/edit-post.php?slug=<?php echo urlencode($baseSlug); ?>">Edit This Blog Post</a>
             <?php endif; ?>
             <a class="button-secondary" href="./">← Back to Blog Archive</a>
         </div>
