@@ -9,16 +9,15 @@ if (wps_auth_is_configured()) {
     exit;
 }
 
+// Start the session unconditionally so the CSRF token is issued on the
+// initial GET (rendered by wps_csrf_field()) and validated on POST.
+wps_session_start();
+
 $error = '';
 $email = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!isset($_SESSION['wps_csrf']) || !isset($_POST['wps_csrf'])) {
-        wps_session_start();
-        wps_csrf_token();
-    } else {
-        wps_csrf_validate_or_die();
-    }
+    wps_csrf_validate_or_die();
 
     $email = trim((string) ($_POST['email'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
