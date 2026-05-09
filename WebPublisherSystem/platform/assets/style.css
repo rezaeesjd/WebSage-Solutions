@@ -288,6 +288,123 @@ button:hover { background: var(--brand-dark); }
     color: var(--muted);
 }
 
+/* ─── GitHub Import Addon ──────────────────────────────────────────────────── */
+
+/* Settings page summary row */
+.ghimp-settings-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+.ghimp-settings-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f3f6fb;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 22px;
+    min-width: 90px;
+}
+.ghimp-settings-stat strong { font-size: 22px; line-height: 1.2; }
+.ghimp-settings-stat span   { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* Connection cards */
+.ghimp-connections { display: grid; gap: 16px; }
+
+.ghimp-card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    background: #fff;
+}
+.ghimp-card-disabled { opacity: .65; }
+
+.ghimp-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+.ghimp-card-title { font-size: 16px; line-height: 1.4; }
+.ghimp-subpath { color: var(--muted); font-weight: 400; font-size: 14px; }
+
+.ghimp-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 14px;
+}
+
+.ghimp-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.ghimp-card-actions button,
+.ghimp-card-actions .button-secondary {
+    font-size: 13px;
+    padding: 8px 14px;
+}
+
+/* Status badges */
+.ghimp-badge {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 3px 11px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.ghimp-badge-ok       { background: var(--success-bg); color: var(--success-text); }
+.ghimp-badge-partial  { background: #fff8e1;            color: #7a5800; }
+.ghimp-badge-error    { background: var(--error-bg);    color: var(--error-text); }
+.ghimp-badge-disabled { background: #f0f0f0;            color: #777; }
+.ghimp-badge-neutral  { background: #eef3f8;            color: var(--muted); }
+
+/* Danger remove button */
+.ghimp-btn-danger { color: var(--error-text) !important; }
+.ghimp-btn-danger:hover { background: var(--error-bg) !important; }
+
+/* Result counts row */
+.ghimp-counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.ghimp-counts span {
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 700;
+}
+.ghimp-count-created   { background: var(--success-bg); color: var(--success-text); }
+.ghimp-count-updated   { background: #e8f0fe;           color: #1a56db; }
+.ghimp-count-unchanged { background: #eef3f8;           color: var(--muted); }
+.ghimp-count-skipped   { background: #fff8e1;           color: #7a5800; }
+.ghimp-count-error     { background: var(--error-bg);   color: var(--error-text); }
+
+/* Result list items — colour-coded by status */
+.ghimp-result-box ul { list-style: none; margin: 0; padding: 0; }
+.ghimp-result-box li {
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.ghimp-result-created   { background: #f0faf4; }
+.ghimp-result-updated   { background: #eef3fe; }
+.ghimp-result-unchanged { background: #f8f9fb; }
+.ghimp-result-skipped   { background: #fffde7; }
+.ghimp-result-error     { background: var(--error-bg); }
+
 @media (max-width: 760px) {
     .header-inner, .actions, .archive-url-actions, .card-actions { align-items: stretch; flex-direction: column; }
     .grid-form, .post-grid, .status-grid { grid-template-columns: 1fr; }
@@ -341,4 +458,12 @@ button:hover { background: var(--brand-dark); }
         justify-content: center;
         text-align: center;
     }
+
+    /* GitHub Import — mobile overrides */
+    .ghimp-card-header  { flex-direction: column; }
+    .ghimp-card-actions { flex-direction: column; }
+    .ghimp-card-actions button,
+    .ghimp-card-actions .button-secondary { width: 100%; justify-content: center; }
+    .ghimp-settings-row { gap: 12px; }
+    .ghimp-settings-stat { flex: 1 1 auto; min-width: 70px; }
 }
