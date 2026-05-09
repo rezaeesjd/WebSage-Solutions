@@ -559,9 +559,10 @@ function ghimp_connection_target_root(array $conn): string
         : GHIMP_LOCAL_ROOT;
 }
 
-function ghimp_target_root_has_multiple_enabled_connections(array $conn): bool
+function ghimp_target_root_overlaps_with_other_enabled_connections(array $conn): bool
 {
     $targetRoot = ghimp_connection_target_root($conn);
+    $targetNorm = rtrim(str_replace("\\", "/", $targetRoot), "/") . "/";
 
     foreach (ghimp_connections_load() as $other) {
         if (($other['id'] ?? '') === ($conn['id'] ?? '')) {
@@ -570,7 +571,10 @@ function ghimp_target_root_has_multiple_enabled_connections(array $conn): bool
         if (!(bool) ($other['enabled'] ?? true)) {
             continue;
         }
-        if (ghimp_connection_target_root($other) === $targetRoot) {
+        $otherRoot = ghimp_connection_target_root($other);
+        $otherNorm = rtrim(str_replace("\\", "/", $otherRoot), "/") . "/";
+
+        if (str_starts_with($targetNorm, $otherNorm) || str_starts_with($otherNorm, $targetNorm)) {
             return true;
         }
     }
@@ -583,6 +587,7 @@ function ghimp_target_root_has_multiple_enabled_connections(array $conn): bool
 function ghimp_sync_connection(array $conn): array
 {
     $targetRoot = ghimp_connection_target_root($conn);
+    $targetNorm = rtrim(str_replace("\\", "/", $targetRoot), "/") . "/";
 
     $results = [];
     $zipOk   = ghimp_sync_via_zip($conn, $targetRoot, $results);
@@ -610,8 +615,8 @@ function ghimp_sync_connection(array $conn): array
             $results[] = ['status' => 'skipped', 'path' => '(prune)', 'message' => 'Prune skipped because sync completed with errors or partial results.'];
         } elseif (empty($syncedPaths)) {
             $results[] = ['status' => 'skipped', 'path' => '(prune)', 'message' => 'Prune skipped because no source files were confirmed as synced.'];
-        } elseif (ghimp_target_root_has_multiple_enabled_connections($conn)) {
-            $results[] = ['status' => 'skipped', 'path' => '(prune)', 'message' => 'Prune skipped because multiple enabled connections share this local target path.'];
+        } elseif (ghimp_target_root_overlaps_with_other_enabled_connections($conn)) {
+            $results[] = ['status' => 'skipped', 'path' => '(prune)', 'message' => 'Prune skipped because enabled connections have overlapping local target paths.'];
         } else {
             ghimp_prune_deleted_files($targetRoot, $syncedPaths, $results);
         }
