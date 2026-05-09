@@ -89,4 +89,33 @@ wps_render_header('Settings');
     </form>
 </section>
 
+<?php
+require_once __DIR__ . '/github-import-engine.php';
+$ghimpSummary = ghimp_summary();
+?>
+
+<section class="panel">
+    <h2>GitHub Import</h2>
+    <p class="muted">Import and sync files from any GitHub repository or folder. Each connection is managed independently and synced on demand.</p>
+
+    <div class="ghimp-settings-row">
+        <div class="ghimp-settings-stat">
+            <strong><?php echo (int) $ghimpSummary['total']; ?></strong>
+            <span>connection<?php echo $ghimpSummary['total'] === 1 ? '' : 's'; ?></span>
+        </div>
+        <div class="ghimp-settings-stat">
+            <strong><?php echo (int) $ghimpSummary['enabled']; ?></strong>
+            <span>enabled</span>
+        </div>
+        <div class="ghimp-settings-stat">
+            <strong><?php echo $ghimpSummary['last_sync'] !== null ? wps_h(substr($ghimpSummary['last_sync'], 0, 10)) : '—'; ?></strong>
+            <span>last sync</span>
+        </div>
+    </div>
+
+    <div class="actions" style="margin-top: 16px;">
+        <a class="button-secondary" href="github-import.php">Manage GitHub Import</a>
+    </div>
+</section>
+
 <?php wps_render_footer(); ?>
