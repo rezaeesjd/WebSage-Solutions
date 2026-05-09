@@ -229,7 +229,7 @@ wps_render_header('GitHub Import');
         foreach ($connections as $c) {
             if ($c['id'] === $connId) { $connTitle = $c['owner'] . '/' . $c['repo']; break; }
         }
-        $counts = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'error' => 0];
+        $counts = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'deleted' => 0, 'skipped' => 0, 'error' => 0];
         foreach ($res['results'] as $r) {
             $s = $r['status'];
             $counts[$s] = ($counts[$s] ?? 0) + 1;
@@ -240,6 +240,9 @@ wps_render_header('GitHub Import');
         <span class="ghimp-count-created"><?php echo $counts['created']; ?> created</span>
         <span class="ghimp-count-updated"><?php echo $counts['updated']; ?> updated</span>
         <span class="ghimp-count-unchanged"><?php echo $counts['unchanged']; ?> unchanged</span>
+        <?php if ($counts['deleted'] > 0): ?>
+        <span class="ghimp-count-skipped"><?php echo $counts['deleted']; ?> deleted</span>
+        <?php endif; ?>
         <?php if ($counts['skipped'] > 0): ?>
         <span class="ghimp-count-skipped"><?php echo $counts['skipped']; ?> skipped</span>
         <?php endif; ?>

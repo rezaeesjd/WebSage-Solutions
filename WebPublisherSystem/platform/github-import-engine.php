@@ -295,6 +295,72 @@ function ghimp_write_file(string $localRoot, string $relativePath, string $conte
     $results[] = ['status' => $existing === null ? 'created' : 'updated', 'path' => $relativePath, 'message' => 'Synced from GitHub.'];
 }
 
+
+function ghimp_collect_local_files(string $targetRoot): array
+{
+    $files = [];
+    if (!is_dir($targetRoot)) {
+        return $files;
+    }
+
+    $root = realpath($targetRoot);
+    if ($root === false) {
+        return $files;
+    }
+
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::LEAVES_ONLY
+    );
+
+    $rootPrefix = rtrim(str_replace('\\', '/', $root), '/') . '/';
+
+    foreach ($iterator as $fileInfo) {
+        if (!$fileInfo->isFile()) {
+            continue;
+        }
+
+        $absolute = str_replace('\\', '/', $fileInfo->getPathname());
+        if (!str_starts_with($absolute, $rootPrefix)) {
+            continue;
+        }
+
+        $relative = substr($absolute, strlen($rootPrefix));
+        if ($relative === '' || ghimp_is_protected($relative)) {
+            continue;
+        }
+
+        $files[$relative] = true;
+    }
+
+    return $files;
+}
+
+function ghimp_prune_deleted_files(string $targetRoot, array $syncedPaths, array &$results): void
+{
+    $localFiles = ghimp_collect_local_files($targetRoot);
+    if (empty($localFiles)) {
+        return;
+    }
+
+    foreach ($localFiles as $relativePath => $_) {
+        if (isset($syncedPaths[$relativePath])) {
+            continue;
+        }
+
+        $targetPath = rtrim($targetRoot, '/\\') . '/' . $relativePath;
+        if (!is_file($targetPath)) {
+            continue;
+        }
+
+        if (@unlink($targetPath)) {
+            $results[] = ['status' => 'deleted', 'path' => $relativePath, 'message' => 'Removed because it no longer exists in GitHub source.'];
+        } else {
+            $results[] = ['status' => 'error', 'path' => $relativePath, 'message' => 'Failed to remove stale local file.'];
+        }
+    }
+}
+
 // ─── Sync via ZIP ─────────────────────────────────────────────────────────────
 
 function ghimp_sync_via_zip(array $conn, string $targetRoot, array &$results): bool
@@ -495,11 +561,25 @@ function ghimp_sync_connection(array $conn): array
         : GHIMP_LOCAL_ROOT;
 
     $results = [];
+    $beforeFiles = ghimp_collect_local_files($targetRoot);
     $zipOk   = ghimp_sync_via_zip($conn, $targetRoot, $results);
 
     if (!$zipOk) {
         $basePath = trim($conn['path'] ?? '', '/');
         ghimp_sync_via_api($conn, $basePath, $targetRoot, $basePath, $results);
+    }
+
+    
+    $syncedPaths = [];
+    foreach ($results as $item) {
+        if (in_array($item['status'], ['created', 'updated', 'unchanged'], true)) {
+            $syncedPaths[$item['path']] = true;
+        }
+    }
+
+    $shouldPrune = !array_key_exists('prune_deleted', $conn) || (bool) $conn['prune_deleted'];
+    if ($shouldPrune) {
+        ghimp_prune_deleted_files($targetRoot, $syncedPaths, $results);
     }
 
     $errors = array_filter($results, fn($r) => $r['status'] === 'error');

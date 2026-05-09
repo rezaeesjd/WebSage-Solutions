@@ -46,7 +46,7 @@ wps_render_header('Settings');
 
 <section class="panel">
     <h2>System update</h2>
-    <p>This updates the uploaded WebPublisherSystem files from GitHub. Your local settings and single-post edits in <code>platform/data/</code> are skipped.</p>
+    <p>System Sync and GitHub Import work together on this page. Sync uses your active GitHub Import connection(s), refreshes repository files, preserves protected runtime data like <code>platform/data/</code>, and removes stale files deleted from the connected repository.</p>
     <div class="actions">
         <a class="button-secondary" href="system-sync.php">Open System Sync</a>
     </div>
