@@ -295,6 +295,72 @@ function ghimp_write_file(string $localRoot, string $relativePath, string $conte
     $results[] = ['status' => $existing === null ? 'created' : 'updated', 'path' => $relativePath, 'message' => 'Synced from GitHub.'];
 }
 
+
+function ghimp_collect_local_files(string $targetRoot): array
+{
+    $files = [];
+    if (!is_dir($targetRoot)) {
+        return $files;
+    }
+
+    $root = realpath($targetRoot);
+    if ($root === false) {
+        return $files;
+    }
+
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::LEAVES_ONLY
+    );
+
+    $rootPrefix = rtrim(str_replace('\\', '/', $root), '/') . '/';
+
+    foreach ($iterator as $fileInfo) {
+        if (!$fileInfo->isFile()) {
+            continue;
+        }
+
+        $absolute = str_replace('\\', '/', $fileInfo->getPathname());
+        if (!str_starts_with($absolute, $rootPrefix)) {
+            continue;
+        }
+
+        $relative = substr($absolute, strlen($rootPrefix));
+        if ($relative === '' || ghimp_is_protected($relative)) {
+            continue;
+        }
+
+        $files[$relative] = true;
+    }
+
+    return $files;
+}
+
+function ghimp_prune_deleted_files(string $targetRoot, array $syncedPaths, array &$results): void
+{
+    $localFiles = ghimp_collect_local_files($targetRoot);
+    if (empty($localFiles)) {
+        return;
+    }
+
+    foreach ($localFiles as $relativePath => $_) {
+        if (isset($syncedPaths[$relativePath])) {
+            continue;
+        }
+
+        $targetPath = rtrim($targetRoot, '/\\') . '/' . $relativePath;
+        if (!is_file($targetPath)) {
+            continue;
+        }
+
+        if (@unlink($targetPath)) {
+            $results[] = ['status' => 'deleted', 'path' => $relativePath, 'message' => 'Removed because it no longer exists in GitHub source.'];
+        } else {
+            $results[] = ['status' => 'error', 'path' => $relativePath, 'message' => 'Failed to remove stale local file.'];
+        }
+    }
+}
+
 // ─── Sync via ZIP ─────────────────────────────────────────────────────────────
 
 function ghimp_sync_via_zip(array $conn, string $targetRoot, array &$results): bool
@@ -485,14 +551,43 @@ function ghimp_test_connection(array $conn): array
     return ['ok' => true, 'message' => 'Connected — ' . $count . ' item(s) found at the configured path.'];
 }
 
+function ghimp_connection_target_root(array $conn): string
+{
+    $localPath = trim((string) ($conn['local_path'] ?? ''), '/');
+    return $localPath !== ''
+        ? GHIMP_LOCAL_ROOT . '/' . $localPath
+        : GHIMP_LOCAL_ROOT;
+}
+
+function ghimp_target_root_overlaps_with_other_enabled_connections(array $conn): bool
+{
+    $targetRoot = ghimp_connection_target_root($conn);
+    $targetNorm = rtrim(str_replace("\\", "/", $targetRoot), "/") . "/";
+
+    foreach (ghimp_connections_load() as $other) {
+        if (($other['id'] ?? '') === ($conn['id'] ?? '')) {
+            continue;
+        }
+        if (!(bool) ($other['enabled'] ?? true)) {
+            continue;
+        }
+        $otherRoot = ghimp_connection_target_root($other);
+        $otherNorm = rtrim(str_replace("\\", "/", $otherRoot), "/") . "/";
+
+        if (str_starts_with($targetNorm, $otherNorm) || str_starts_with($otherNorm, $targetNorm)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // ─── Sync One Connection ──────────────────────────────────────────────────────
 
 function ghimp_sync_connection(array $conn): array
 {
-    $localPath  = trim($conn['local_path'] ?? '', '/');
-    $targetRoot = $localPath !== ''
-        ? GHIMP_LOCAL_ROOT . '/' . $localPath
-        : GHIMP_LOCAL_ROOT;
+    $targetRoot = ghimp_connection_target_root($conn);
+    $targetNorm = rtrim(str_replace("\\", "/", $targetRoot), "/") . "/";
 
     $results = [];
     $zipOk   = ghimp_sync_via_zip($conn, $targetRoot, $results);
@@ -502,9 +597,30 @@ function ghimp_sync_connection(array $conn): array
         ghimp_sync_via_api($conn, $basePath, $targetRoot, $basePath, $results);
     }
 
+    
+    $syncedPaths = [];
+    foreach ($results as $item) {
+        if (in_array($item['status'], ['created', 'updated', 'unchanged'], true)) {
+            $syncedPaths[$item['path']] = true;
+        }
+    }
+
     $errors = array_filter($results, fn($r) => $r['status'] === 'error');
     $total  = count($results);
     $status = count($errors) === 0 ? 'ok' : (count($errors) < $total ? 'partial' : 'error');
+
+    $shouldPrune = !array_key_exists('prune_deleted', $conn) || (bool) $conn['prune_deleted'];
+    if ($shouldPrune) {
+        if ($status !== 'ok') {
+            $results[] = ['status' => 'skipped', 'path' => '(prune)', 'message' => 'Prune skipped because sync completed with errors or partial results.'];
+        } elseif (empty($syncedPaths)) {
+            $results[] = ['status' => 'skipped', 'path' => '(prune)', 'message' => 'Prune skipped because no source files were confirmed as synced.'];
+        } elseif (ghimp_target_root_overlaps_with_other_enabled_connections($conn)) {
+            $results[] = ['status' => 'skipped', 'path' => '(prune)', 'message' => 'Prune skipped because enabled connections have overlapping local target paths.'];
+        } else {
+            ghimp_prune_deleted_files($targetRoot, $syncedPaths, $results);
+        }
+    }
 
     ghimp_connection_update_status($conn['id'], $status);
 
