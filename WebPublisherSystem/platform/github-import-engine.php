@@ -551,17 +551,40 @@ function ghimp_test_connection(array $conn): array
     return ['ok' => true, 'message' => 'Connected — ' . $count . ' item(s) found at the configured path.'];
 }
 
+function ghimp_connection_target_root(array $conn): string
+{
+    $localPath = trim((string) ($conn['local_path'] ?? ''), '/');
+    return $localPath !== ''
+        ? GHIMP_LOCAL_ROOT . '/' . $localPath
+        : GHIMP_LOCAL_ROOT;
+}
+
+function ghimp_target_root_has_multiple_enabled_connections(array $conn): bool
+{
+    $targetRoot = ghimp_connection_target_root($conn);
+
+    foreach (ghimp_connections_load() as $other) {
+        if (($other['id'] ?? '') === ($conn['id'] ?? '')) {
+            continue;
+        }
+        if (!(bool) ($other['enabled'] ?? true)) {
+            continue;
+        }
+        if (ghimp_connection_target_root($other) === $targetRoot) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // ─── Sync One Connection ──────────────────────────────────────────────────────
 
 function ghimp_sync_connection(array $conn): array
 {
-    $localPath  = trim($conn['local_path'] ?? '', '/');
-    $targetRoot = $localPath !== ''
-        ? GHIMP_LOCAL_ROOT . '/' . $localPath
-        : GHIMP_LOCAL_ROOT;
+    $targetRoot = ghimp_connection_target_root($conn);
 
     $results = [];
-    $beforeFiles = ghimp_collect_local_files($targetRoot);
     $zipOk   = ghimp_sync_via_zip($conn, $targetRoot, $results);
 
     if (!$zipOk) {
@@ -577,14 +600,22 @@ function ghimp_sync_connection(array $conn): array
         }
     }
 
-    $shouldPrune = !array_key_exists('prune_deleted', $conn) || (bool) $conn['prune_deleted'];
-    if ($shouldPrune) {
-        ghimp_prune_deleted_files($targetRoot, $syncedPaths, $results);
-    }
-
     $errors = array_filter($results, fn($r) => $r['status'] === 'error');
     $total  = count($results);
     $status = count($errors) === 0 ? 'ok' : (count($errors) < $total ? 'partial' : 'error');
+
+    $shouldPrune = !array_key_exists('prune_deleted', $conn) || (bool) $conn['prune_deleted'];
+    if ($shouldPrune) {
+        if ($status !== 'ok') {
+            $results[] = ['status' => 'skipped', 'path' => '(prune)', 'message' => 'Prune skipped because sync completed with errors or partial results.'];
+        } elseif (empty($syncedPaths)) {
+            $results[] = ['status' => 'skipped', 'path' => '(prune)', 'message' => 'Prune skipped because no source files were confirmed as synced.'];
+        } elseif (ghimp_target_root_has_multiple_enabled_connections($conn)) {
+            $results[] = ['status' => 'skipped', 'path' => '(prune)', 'message' => 'Prune skipped because multiple enabled connections share this local target path.'];
+        } else {
+            ghimp_prune_deleted_files($targetRoot, $syncedPaths, $results);
+        }
+    }
 
     ghimp_connection_update_status($conn['id'], $status);
 
