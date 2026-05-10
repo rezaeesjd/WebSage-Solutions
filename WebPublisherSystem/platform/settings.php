@@ -92,6 +92,7 @@ wps_render_header('Settings');
 <?php
 require_once __DIR__ . '/github-import-engine.php';
 $ghimpSummary = ghimp_summary();
+$latestConnection = $ghimpSummary['latest_connection'] ?? null;
 ?>
 
 <section class="panel">
@@ -112,6 +113,14 @@ $ghimpSummary = ghimp_summary();
             <span>last sync</span>
         </div>
     </div>
+
+    <?php if ($latestConnection !== null): ?>
+    <div class="ghimp-settings-latest" style="margin-top: 16px;">
+        <h3 style="margin: 0 0 8px;">Latest synced connection</h3>
+        <p style="margin: 0 0 8px;"><strong><?php echo wps_h($latestConnection['owner'] . '/' . $latestConnection['repo']); ?></strong><?php if (($latestConnection['path'] ?? '') !== ''): ?> / <?php echo wps_h($latestConnection['path']); ?><?php endif; ?></p>
+        <p class="muted" style="margin: 0;">Branch: <code><?php echo wps_h($latestConnection['branch']); ?></code><?php if (($latestConnection['local_path'] ?? '') !== ''): ?> · Local target: <code><?php echo wps_h($latestConnection['local_path']); ?></code><?php endif; ?> · <?php echo ($latestConnection['enabled'] ?? false) ? 'Active' : 'Disabled'; ?> · Last synced: <?php echo wps_h($latestConnection['last_sync']); ?></p>
+    </div>
+    <?php endif; ?>
 
     <div class="actions" style="margin-top: 16px;">
         <a class="button-secondary" href="github-import.php">Manage GitHub Import</a>
