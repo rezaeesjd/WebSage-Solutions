@@ -706,3 +706,75 @@ A `WPS:PUBLISH_BLOG` task is complete only when:
 - the post is not called “published” unless the live archive and single post URL work
 
 If live verification is not possible, the correct final status is `needs_live_verification`, not `published`.
+
+---
+
+## Generation process hardening addendum
+
+The following rules are mandatory for future `WPS:GENERATE_CONTENT` runs.
+
+### A) Hard clarify gate
+Before any content file generation, confirm required inputs are present. If missing, stop and mark task blocked with explicit missing fields.
+
+### B) Source-facts provenance matrix
+`source-facts.md` must include a matrix linking each material claim to a source input, with confidence and review flags.
+
+### C) Missing information handling
+Every required data point must be labeled as provided, placeholder-used, or blocking-missing.
+
+### D) Link provenance and WebsiteLink blocker
+All outbound booking/trust links must be traceable in source facts. `{{WebsiteLink}}` is never publish-ready and never compatible with `published` status.
+
+### E) Product code separation
+Product/reference codes are metadata only and must not appear in traveler-facing public content.
+
+### F) Public blog cleanliness
+Public article files must remain free of admin labels, QA notes, debug/schema snippets, and operator comments.
+
+### G) QA report quality
+`qa-report.md` must include gate-by-gate pass/fail, blockers, remediation actions, and a defensible final status.
+
+### H) Meta phase markers
+`meta.json` must track `workflow_phase`, `workflow_status`, `blockers`, and timestamp for phase updates.
+
+### I) Conversion optimization minimums
+Every blog package must include early and final direct-booking CTAs, booking-confidence details, and friction-reducing practical information.
+
+### J) End-user readiness
+Generated content must be immediately understandable for travelers, scannable, and ready for human review without structural cleanup.
+
+---
+
+## Generation process hardening addendum v2 (enforcement)
+
+These rules convert process guidance into strict acceptance criteria.
+
+1. **Hard clarify preflight is mandatory.**
+   - Output must include one of: `PASS`, `BLOCKED_MISSING_INPUT`, `PROVISIONAL_WITH_APPROVAL`.
+
+2. **No source-facts, no generation.**
+   - `source-facts.md` must be created first and include a provenance matrix.
+
+3. **Required field status taxonomy.**
+   - Each key fact must be marked as: `confirmed`, `missing`, `conflicted`, `inferred`, `needs_human_review`, or `not_applicable`.
+
+4. **Clarification/blocker registry is required.**
+   - `meta.json` and `qa-report.md` must include `clarifications_needed`, `blocking_issues`, and `conversion_blockers` arrays.
+
+5. **WebsiteLink is a conversion blocker.**
+   - If `{{WebsiteLink}}` is used, status cannot be treated as fully ready and `published` is disallowed.
+
+6. **Public blog cleanliness is a blocker-level check.**
+   - Any admin/internal headings in `blog-post.md` cause QA failure until fixed.
+
+7. **Product code hygiene.**
+   - Product codes are metadata only and must never appear in traveler-facing files.
+
+8. **QA report minimum structure is mandatory.**
+   - Gate matrix, issue severity, blockers, remediation actions, and final recommendation are required.
+
+9. **Conversion-readiness must be explicitly tested.**
+   - QA must confirm early CTA, final CTA, and booking-confidence details backed by source facts.
+
+10. **Definition of done is validator-oriented.**
+   - A run is complete only when required files, schema checks, provenance checks, and cleanliness checks all pass.
