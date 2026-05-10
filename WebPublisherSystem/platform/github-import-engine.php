@@ -645,22 +645,36 @@ function ghimp_sync_all_enabled(): array
 
 function ghimp_summary(): array
 {
-    $connections = ghimp_connections_load();
-    $total       = count($connections);
-    $enabled     = count(array_filter($connections, fn($c) => $c['enabled'] ?? true));
-    $lastSync    = null;
+    $connections       = ghimp_connections_load();
+    $total             = count($connections);
+    $enabled           = count(array_filter($connections, fn($c) => $c['enabled'] ?? true));
+    $lastSync          = null;
+    $latestConnection  = null;
 
     foreach ($connections as $conn) {
-        if (!empty($conn['last_sync'])) {
-            if ($lastSync === null || $conn['last_sync'] > $lastSync) {
-                $lastSync = $conn['last_sync'];
-            }
+        if (empty($conn['last_sync'])) {
+            continue;
+        }
+
+        if ($lastSync === null || $conn['last_sync'] > $lastSync) {
+            $lastSync = $conn['last_sync'];
+            $latestConnection = [
+                'id'         => $conn['id'] ?? '',
+                'owner'      => $conn['owner'] ?? '',
+                'repo'       => $conn['repo'] ?? '',
+                'branch'     => $conn['branch'] ?? 'main',
+                'path'       => trim((string) ($conn['path'] ?? ''), '/'),
+                'local_path' => trim((string) ($conn['local_path'] ?? ''), '/'),
+                'enabled'    => (bool) ($conn['enabled'] ?? true),
+                'last_sync'  => $conn['last_sync'],
+            ];
         }
     }
 
     return [
-        'total'     => $total,
-        'enabled'   => $enabled,
-        'last_sync' => $lastSync,
+        'total'             => $total,
+        'enabled'           => $enabled,
+        'last_sync'         => $lastSync,
+        'latest_connection' => $latestConnection,
     ];
 }
