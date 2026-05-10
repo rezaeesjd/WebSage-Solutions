@@ -1,56 +1,83 @@
 # COMMANDS.md
 
-## Command Router (Hard Clarify Gate)
+## Command Router
 
-If the user prompt is ambiguous, stop and classify before any file writes.
+Route by explicit prefix first:
+1. `WPS:GENERATE_CONTENT`
+2. `WPS:PUBLISH_BLOG`
+3. `WPS:GENERATE_AND_PUBLISH`
+4. `WPS:IMPLEMENT_GENERATION_PROCESS_IMPROVEMENTS`
+5. `WPS:GENERATION_PROCESS_QA`
+6. `WPS:CLARIFY`
 
-1. Detect prefix:
-   - `WPS:GENERATE_CONTENT`
-   - `WPS:PUBLISH_BLOG`
-   - `WPS:GENERATE_AND_PUBLISH`
-   - `WPS:IMPLEMENT_GENERATION_PROCESS_IMPROVEMENTS`
-2. If no prefix and prompt is tour-specific content creation, default to `WPS:GENERATE_CONTENT`.
-3. If no prefix and prompt is process/system/templates/QA only, route to **SYSTEM IMPROVEMENT MODE** (no tour package writes).
+If no prefix:
+- Tour/package creation intent → treat as `WPS:GENERATE_CONTENT`.
+- Strategy/process/template/QA intent → system-improvement mode only (no tour package writes).
 
-## Hard Clarify Gate (Blocking)
+## Hard Clarify Gate (Mandatory)
 
-Before generation, block and request missing essentials if these are unknown:
-- canonical tour title
-- active brand (default Milano Adventures only if not overridden)
-- primary website booking URL policy (real URL provided vs placeholder accepted)
-- source input payload (facts/itinerary/inclusions/policies)
+Before writing any package file, run a preflight gate.
 
-If any blocker is missing, output `STATUS:BLOCKED_MISSING_INPUT` and list exact required inputs.
+### Required intake fields
+- `canonical_tour_title`
+- `active_brand` (default only if not overridden)
+- `source_payload` (raw facts / itinerary / inclusions / exclusions / policy)
+- `website_link_policy` (`final_url_provided` or `placeholder_approved`)
+
+### Gate outcomes
+- **PASS**: continue generation.
+- **BLOCK**: emit `STATUS:BLOCKED_MISSING_INPUT` and route to `WPS:CLARIFY` with explicit missing fields.
+- **PROVISIONAL**: allowed only with explicit user approval captured in metadata.
+
+## Clarification Recording Rules
+
+If blocked/provisional, store in `meta.json` and `qa-report.md`:
+- `clarifications_needed` (array)
+- `blocking_issues` (array)
+- `conversion_blockers` (array)
 
 ## WebsiteLink Blocker Rules
 
-- `website_link` is mandatory for publish-ready states.
-- If missing, generation may continue with `{{WebsiteLink}}`, but QA must force:
-  - `publish_status: "needs_fix"` (or `ready_for_review` only with explicit human acceptance)
-  - `qa_status: "fail_links"`
-- `published` is impossible while `{{WebsiteLink}}` exists anywhere in public CTA fields.
+- `website_link` is required for conversion-complete state.
+- If missing, use `{{WebsiteLink}}` only when user approves provisional generation.
+- While `{{WebsiteLink}}` exists in CTA/public metadata:
+  - `publish_status` cannot be `published`
+  - `qa_status` must not be `pass`
+  - add `conversion_blockers` entry: `missing_website_booking_url`
+
+## Link Provenance Rules
+
+Every external public link in `blog-post.md`, `faq.md`, and `meta.json` must:
+- appear in `source-facts.md` URL matrix
+- include a source pointer (input field or snippet)
+
+Unknown links must remain placeholders and be flagged in QA.
 
 ## Product Code Separation Rules
 
-- `product_reference_code` is operational metadata only.
-- Never expose product code in `blog-post.md` or `faq.md`.
-- Keep product code in:
-  - `source-facts.md`
-  - `meta.json`
-  - optional internal ops notes
+- Keep `product_reference_code` in metadata artifacts only.
+- If multiple codes exist, separate as:
+  - `internal_product_code`
+  - `supplier_product_code`
+  - `ota_product_code`
+- Never expose any product code in public content files (`blog-post.md`, `faq.md`).
 
-## Meta Phase/Status Markers
+## Public Blog Cleanliness Rules
 
-`meta.json` must include:
-- `workflow_phase`: `intake|facts_locked|draft_generated|qa_complete|publish_ready|published`
-- `workflow_status`: `in_progress|blocked|complete`
-- `blockers`: string[]
-- `last_phase_update_utc`: ISO-8601 UTC timestamp
+`blog-post.md` must not include admin/internal headings:
+- Page Title
+- URL Slug
+- Meta Description
+- Primary Keyword
+- Funnel Stage
+- Internal Linking Suggestions
+- Schema/Debug/QA notes
 
-## Required QA Artifact Rule
+## Completion Contract (Generation)
 
-Every generation run must create/update `qa-report.md` with:
-- pass/fail table
-- blocker list
-- provenance gaps
-- publish recommendation
+A generation run is complete only if all are true:
+- all required package files exist
+- `source-facts.md` exists with provenance matrix + field statuses
+- `qa-report.md` exists with severity-ranked findings
+- `meta.json` validates against schema guidance
+- final status is honest and non-published unless live verification was performed

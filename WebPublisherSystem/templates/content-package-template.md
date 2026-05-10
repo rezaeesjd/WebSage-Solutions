@@ -1,12 +1,29 @@
-# Content Package Template (Process)
+# Content Package Template (Runbook)
 
-Use this as run-order checklist for `WPS:GENERATE_CONTENT`:
+## Preflight
+1. Command classified
+2. Hard clarify gate outcome recorded (`PASS|BLOCKED_MISSING_INPUT|PROVISIONAL_WITH_APPROVAL`)
+3. If provisional, approval evidence captured
 
-1. Intake gate passed
-2. Source-facts provenance matrix complete
-3. Missing info classification complete
-4. Strategy/keywords complete
-5. Public blog generated (clean)
-6. Supporting files generated
-7. QA checklist executed
-8. Final status written to meta + qa-report
+## Build Order (No Skips)
+1. `source-facts.md` (with provenance matrix + status enums)
+2. `brief.md`
+3. `keywords.md`
+4. `blog-post.md` (public-only)
+5. `faq.md`
+6. `meta.json`
+7. `internal-links.md`
+8. `automation-notes.md`
+9. `qa-report.md`
+
+## Pre-Completion Validation
+- Required files complete
+- Public-content cleanliness checks pass
+- Link provenance checks pass
+- Metadata/status schema checks pass
+- Conversion blocker checks pass
+
+## Completion Output
+- Final generation status
+- Blockers summary
+- Human review actions

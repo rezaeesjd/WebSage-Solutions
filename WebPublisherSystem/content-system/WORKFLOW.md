@@ -1,55 +1,87 @@
 # WORKFLOW.md
 
-## 0 → Content Package Generation Workflow (Strict)
+## 0 → Content Package Workflow (Strict)
 
-### Phase 0: Intake + Clarify Gate
-- classify command.
-- validate required inputs.
-- if missing critical inputs, set blocked status and stop writing tour copy.
+## Phase 0 — Intake & Command Classification
+- Detect command prefix.
+- If no prefix, classify user intent.
+- Refuse unintended publishing actions during generation tasks.
 
-### Phase 1: Source-Facts Provenance Matrix
-Create `source-facts.md` first, including a matrix:
-- Fact
+## Phase 1 — Preflight Hard Clarify Gate
+Build a preflight checklist and decide:
+- `PASS`
+- `BLOCKED_MISSING_INPUT`
+- `PROVISIONAL_WITH_APPROVAL`
+
+Critical blockers (must stop unless provisional approval is explicit):
+- missing canonical tour title
+- missing source payload
+- unclear brand identity
+- missing website booking URL policy
+
+If blocked, output `WPS:CLARIFY` questions and stop copy generation.
+
+## Phase 2 — Source Facts Lock
+Create `source-facts.md` first.
+
+### Required provenance matrix columns
+- Field
 - Value
-- Source snippet/input field
+- Status (`confirmed|missing|conflicted|inferred|needs_human_review|not_applicable`)
+- Source reference (raw input line/field)
 - Confidence (`high|medium|low`)
 - Public-safe (`yes|no`)
-- Needs human verification (`yes|no`)
 
-No marketing copy is allowed before this matrix exists.
+No public copy can be drafted before this phase is complete.
 
-### Phase 2: Missing Information Handling
-For each required field, assign one:
-- `provided`
-- `missing_placeholder_used`
-- `missing_blocking`
+## Phase 3 — Missing/Conflict Resolution
+For each critical field (URLs, policy, logistics, pricing/reviews when used):
+- keep confirmed value
+- or mark missing/conflicted with clear handling rule
+- avoid unverifiable claims in downstream files
 
-Rules:
-- Missing factual UX enhancers (e.g., language/accessibility) can proceed with omission.
-- Missing legal/commercial critical data (website booking URL for CTA, cancellation policy if referenced) must be flagged as blocker or omitted from claims.
+## Phase 4 — Strategy + Conversion Blueprint
+Define:
+- intent stage map (TOFU/MOFU/BOFU)
+- primary conversion action (website booking)
+- trust support action (OTA references secondary)
+- friction reducers required in copy (meeting point, duration, policy, accessibility)
 
-### Phase 3: Strategy + Conversion Mapping
-Require explicit conversion plan:
-- TOFU/MOFU/BOFU mapping
-- primary conversion event (website click/book)
-- secondary trust event (OTA proof only)
-- friction removers (meeting point clarity, duration clarity, cancellation clarity)
+## Phase 5 — Package Generation
+Generate required files in order:
+1. `source-facts.md`
+2. `brief.md`
+3. `keywords.md`
+4. `blog-post.md`
+5. `faq.md`
+6. `meta.json`
+7. `internal-links.md`
+8. `automation-notes.md`
+9. `qa-report.md`
 
-### Phase 4: Content Package Assembly
-Generate all required files and enforce clean public body:
-- no admin labels in `blog-post.md`
-- no raw placeholders except approved link placeholders
-- no product codes in public content
+## Phase 6 — Structural + Cleanliness Validation
+Validate:
+- required files exist
+- `meta.json` required keys + enums are valid
+- public content excludes admin/internal labels
+- product codes are not leaked into public files
 
-### Phase 5: Link Provenance Validation
-Validate links against source-facts:
-- Every non-internal public link must exist in source-facts URL section.
-- If a URL is absent from source-facts, fail QA link provenance.
+## Phase 7 — Link Provenance + Blockers
+Validate:
+- website/TripAdvisor/Viator links traceable in source-facts
+- placeholders only where allowed
+- missing website link recorded as conversion blocker
 
-### Phase 6: QA + Release Decision
-Produce `qa-report.md` with final recommendation:
+## Phase 8 — QA Decision & Final Status
+`qa-report.md` must include:
+- category checks and outcomes
+- blockers with severity (`high|medium|low`)
+- owner/action recommendations
+- final package status recommendation
+
+Allowed generation-stage status outcomes:
+- `draft`
 - `ready_for_review`
 - `needs_fix`
-- `ready_for_sync`
-- `needs_live_verification`
-- `published` (live checks required)
+
+Publishing statuses remain a separate workflow concern.

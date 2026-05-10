@@ -742,3 +742,39 @@ Every blog package must include early and final direct-booking CTAs, booking-con
 
 ### J) End-user readiness
 Generated content must be immediately understandable for travelers, scannable, and ready for human review without structural cleanup.
+
+---
+
+## Generation process hardening addendum v2 (enforcement)
+
+These rules convert process guidance into strict acceptance criteria.
+
+1. **Hard clarify preflight is mandatory.**
+   - Output must include one of: `PASS`, `BLOCKED_MISSING_INPUT`, `PROVISIONAL_WITH_APPROVAL`.
+
+2. **No source-facts, no generation.**
+   - `source-facts.md` must be created first and include a provenance matrix.
+
+3. **Required field status taxonomy.**
+   - Each key fact must be marked as: `confirmed`, `missing`, `conflicted`, `inferred`, `needs_human_review`, or `not_applicable`.
+
+4. **Clarification/blocker registry is required.**
+   - `meta.json` and `qa-report.md` must include `clarifications_needed`, `blocking_issues`, and `conversion_blockers` arrays.
+
+5. **WebsiteLink is a conversion blocker.**
+   - If `{{WebsiteLink}}` is used, status cannot be treated as fully ready and `published` is disallowed.
+
+6. **Public blog cleanliness is a blocker-level check.**
+   - Any admin/internal headings in `blog-post.md` cause QA failure until fixed.
+
+7. **Product code hygiene.**
+   - Product codes are metadata only and must never appear in traveler-facing files.
+
+8. **QA report minimum structure is mandatory.**
+   - Gate matrix, issue severity, blockers, remediation actions, and final recommendation are required.
+
+9. **Conversion-readiness must be explicitly tested.**
+   - QA must confirm early CTA, final CTA, and booking-confidence details backed by source facts.
+
+10. **Definition of done is validator-oriented.**
+   - A run is complete only when required files, schema checks, provenance checks, and cleanliness checks all pass.

@@ -1,55 +1,66 @@
 # QA-CHECKLIST.md
 
-## Mandatory QA Gates
+## Gate 1 — Command & Clarify
+- [ ] Correct command classification recorded
+- [ ] Hard clarify preflight executed
+- [ ] Missing critical input triggers block or explicit provisional approval
+- [ ] `clarifications_needed` captured when applicable
 
-### 1) Hard Clarify Gate
-- [ ] Required inputs present
-- [ ] Blockers declared when missing
-- [ ] Workflow status reflects reality
+## Gate 2 — Required File Set
+- [ ] All required files exist (including `source-facts.md` and `qa-report.md`)
+- [ ] Folder name is valid kebab-case
+- [ ] No duplicate package folder for same canonical tour
 
-### 2) Provenance Matrix Gate
-- [ ] `source-facts.md` includes fact-by-fact provenance matrix
-- [ ] No unsupported claims in public copy
-- [ ] Conflicts explicitly listed
+## Gate 3 — Source Facts Provenance
+- [ ] `source-facts.md` created before copy generation
+- [ ] Provenance matrix present with required columns
+- [ ] Each required field has status enum value
+- [ ] Missing/conflicted fields are clearly listed
 
-### 3) Missing Information Gate
-- [ ] Missing fields categorized (`provided|missing_placeholder_used|missing_blocking`)
-- [ ] Blocking missing fields stop publish-ready status
+## Gate 4 — Missing Information Handling
+- [ ] Missing website URL handled by blocker rules
+- [ ] Missing policy/logistics fields not converted into invented claims
+- [ ] Conflicted values flagged for human review
 
-### 4) Link + WebsiteLink Gate
-- [ ] Website link present in source facts + meta
-- [ ] Website is primary CTA
-- [ ] OTA links secondary only
-- [ ] Placeholder links force non-published status
+## Gate 5 — Link Provenance & CTA Priority
+- [ ] Website link is primary CTA target
+- [ ] TripAdvisor/Viator are secondary trust/support links only
+- [ ] All external links trace to source-facts URL section
+- [ ] Placeholders used only when data not provided and flagged in QA
 
-### 5) Product Code Separation Gate
-- [ ] Product code present in `meta.json` if provided
-- [ ] Product code absent from public blog/FAQ
+## Gate 6 — Product Code Separation
+- [ ] Codes stored in metadata/source-facts only
+- [ ] Internal/supplier/OTA code distinctions are explicit when available
+- [ ] No product codes appear in public content files
 
-### 6) Public Blog Cleanliness Gate
-- [ ] Single H1 present
-- [ ] No admin labels leaked
-- [ ] No schema/debug/operator notes leaked
+## Gate 7 — Public Content Cleanliness
+- [ ] Exactly one traveler-facing H1
+- [ ] No admin/internal labels in public article body
+- [ ] No debug/schema/QA artifacts in public article body
+- [ ] Internal linking suggestions are stored outside public body
 
-### 7) QA Report Completeness Gate
-- [ ] Pass/fail by category
-- [ ] Blockers + severity
-- [ ] Fix list with owner/action
-- [ ] Final status + rationale
+## Gate 8 — Meta/Status Schema
+- [ ] `meta.json` valid JSON
+- [ ] Required keys exist
+- [ ] Workflow phase/status keys valid
+- [ ] Blocking/conversion fields present and accurate
+- [ ] `publish_status` is honest and non-published unless verified in publish workflow
 
-### 8) Meta Phase/Status Gate
-- [ ] `workflow_phase` valid
-- [ ] `workflow_status` valid
-- [ ] `blockers` accurate
-- [ ] `last_phase_update_utc` valid ISO UTC
+## Gate 9 — Conversion & Growth Readiness
+- [ ] Early soft CTA present
+- [ ] Strong final CTA present
+- [ ] Booking-confidence details included (only from confirmed facts)
+- [ ] Friction reducers included (logistics/policy/accessibility where available)
 
-### 9) Conversion/Growth Optimization Gate
-- [ ] Early soft CTA in first half
-- [ ] Strong CTA near end
-- [ ] Booking confidence details present
-- [ ] Friction reducers included (logistics/policy clarity)
+## Gate 10 — End-User Readiness
+- [ ] Public copy is scannable and clear
+- [ ] Claims are evidence-backed or omitted
+- [ ] Next booking action is obvious
+- [ ] Human review actions are explicit in QA report
 
-### 10) End-User Readiness Gate
-- [ ] Readability/scannability passes
-- [ ] Practical traveler expectations explained
-- [ ] Next action obvious and direct-booking oriented
+## QA Report Minimum Output
+- [ ] Pass/fail matrix by gate
+- [ ] Issues grouped by type
+- [ ] Severity assigned per issue
+- [ ] Remediation actions with owner
+- [ ] Final recommendation status
